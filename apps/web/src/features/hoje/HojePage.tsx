@@ -1,14 +1,17 @@
 import {
+  compromissoDeEvento,
   eventosDoDia,
   formatar,
   inicioDoDiaApos,
   itensDeAtencao,
-  paraHoraLocal,
   posicaoNaSemana,
+  proximosCompromissos,
   type AlvoAdiamento,
+  type Compromisso,
+  type Evento,
   type ItemHoje,
 } from '@rumo/core';
-import { Check, Clock, Lock, Pause } from 'lucide-react';
+import { Check, Clock, Pause } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { haDias } from '../../app/texto';
 import { useAgora } from '../../app/useAgora';
@@ -20,6 +23,8 @@ import { adiar, pausar, registrarContato, registrarSessao } from '../../db/acoes
 import { db } from '../../db/db';
 import { useCalendario } from '../../db/preferencias';
 import { excluir, useLista } from '../../db/repo';
+import { EventoForm } from '../agenda/EventoForm';
+import { ListaCompromissos, ProximosCompromissos } from './Compromissos';
 
 type Alvo = { tipo: AlvoAdiamento; id: string; nome: string };
 
@@ -32,6 +37,7 @@ export function HojePage() {
   const adiamentos = useLista(db.adiamentos);
   const eventos = useLista(db.eventos);
   const [adiando, setAdiando] = useState<Alvo | null>(null);
+  const [editandoEvento, setEditandoEvento] = useState<Evento | 'novo' | null>(null);
 
   const subtitulo = formatar(agora, "EEEE, d 'de' MMMM");
 
@@ -40,27 +46,17 @@ export function HojePage() {
   }
 
   const itens = itensDeAtencao({ atividades, sessoes, pessoas, adiamentos }, agora, cal);
-  const deHoje = eventosDoDia(eventos, agora);
-  const nomePessoa = (id: string | null) => pessoas.find((p) => p.id === id)?.nome;
+  const deHoje = eventosDoDia(eventos, agora).map(compromissoDeEvento);
+  const proximos = proximosCompromissos({ eventos, sessoes, atividades }, agora);
+  const abrir = (c: Compromisso) => {
+    if (c.tipo === 'evento') setEditandoEvento(c.evento);
+  };
 
   return (
     <Pagina titulo="Hoje" subtitulo={subtitulo}>
       {deHoje.length > 0 && (
         <Secao titulo="Agenda">
-          <ul className={`${classeCartao} divide-y divide-black/5 dark:divide-white/10`}>
-            {deHoje.map((e) => (
-              <li key={e.id} className="flex items-center gap-3 px-4 py-3">
-                <span className="w-12 shrink-0 text-sm font-semibold tabular-nums text-neutral-500">
-                  {paraHoraLocal(e.inicio)}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium">{e.titulo}</span>
-                  {e.pessoaId && <span className="block text-sm text-neutral-500">com {nomePessoa(e.pessoaId)}</span>}
-                </span>
-                {e.fixo && <Lock size={16} className="text-neutral-400" aria-label="Fixo" />}
-              </li>
-            ))}
-          </ul>
+          <ListaCompromissos itens={deHoje} pessoas={pessoas} onAbrir={abrir} />
         </Secao>
       )}
 
@@ -80,6 +76,29 @@ export function HojePage() {
           </ul>
         )}
       </Secao>
+
+      <ProximosCompromissos
+        grupos={proximos}
+        agora={agora}
+        pessoas={pessoas}
+        onAbrir={abrir}
+        onNovo={() => setEditandoEvento('novo')}
+      />
+
+      <Sheet
+        aberto={editandoEvento !== null}
+        onFechar={() => setEditandoEvento(null)}
+        titulo={editandoEvento === 'novo' ? 'Novo compromisso' : 'Editar evento'}
+      >
+        {editandoEvento !== null && (
+          <EventoForm
+            key={editandoEvento === 'novo' ? 'novo' : editandoEvento.id}
+            evento={editandoEvento === 'novo' ? undefined : editandoEvento}
+            pessoas={pessoas}
+            onFechar={() => setEditandoEvento(null)}
+          />
+        )}
+      </Sheet>
 
       <AdiarSheet alvo={adiando} agora={agora} diasAteProximaSemana={7 - posicaoNaSemana(agora, cal)} onFechar={() => setAdiando(null)} />
     </Pagina>

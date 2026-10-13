@@ -1,10 +1,8 @@
 import {
-  combinarDataHora,
-  formatar,
   inicioDoDia,
-  inicioDoDiaApos,
   paraDataLocal,
   paraHoraLocal,
+  rotuloDia,
   type Evento,
 } from '@rumo/core';
 import { Lock, Plus } from 'lucide-react';
@@ -32,7 +30,6 @@ export function AgendaPage() {
   if (!eventos || !pessoas) return <Pagina titulo="Agenda" acao={novo}>{null}</Pagina>;
 
   const hoje = paraDataLocal(agora);
-  const amanha = paraDataLocal(inicioDoDiaApos(agora, 1));
   const desdeHoje = inicioDoDia(agora).toISOString();
   const proximos = eventos.filter((e) => e.fim >= desdeHoje).sort((a, b) => a.inicio.localeCompare(b.inicio));
 
@@ -43,8 +40,6 @@ export function AgendaPage() {
     porDia.set(dia, [...(porDia.get(dia) ?? []), e]);
   }
 
-  const rotuloDia = (dia: string) =>
-    dia === hoje ? 'Hoje' : dia === amanha ? 'Amanhã' : formatar(combinarDataHora(dia, '12:00'), "EEEE, d 'de' MMMM");
 
   return (
     <Pagina titulo="Agenda" acao={novo}>
@@ -56,7 +51,7 @@ export function AgendaPage() {
       )}
 
       {[...porDia].map(([dia, lista]) => (
-        <Secao key={dia} titulo={rotuloDia(dia)}>
+        <Secao key={dia} titulo={rotuloDia(dia, agora)}>
           <ul className={`${classeCartao} divide-y divide-black/5 dark:divide-white/10`}>
             {lista.map((e) => (
               <li key={e.id}>

@@ -6,3 +6,4 @@ export * from './rules/atraso';
 export * from './rules/metaSemanal';
 export * from './rules/contato';
 export * from './rules/hoje';
+export * from './rules/compromissos';
