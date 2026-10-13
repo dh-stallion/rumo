@@ -5,4 +5,6 @@ export function haDias(dias: number): string {
   return `há ${dias} dias`;
 }
 
-export const vezes = (n: number) => (n === 1 ? '1 vez' : `${n} vezes`);
+export const plural = (n: number, singular: string, plural: string) => `${n} ${n === 1 ? singular : plural}`;
+
+export const vezes =(n: number) => (n === 1 ? '1 vez' : `${n} vezes`);

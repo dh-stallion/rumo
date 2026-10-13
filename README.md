@@ -18,7 +18,7 @@ Requer Node 22+.
 ```bash
 npm install
 npm run dev          # http://localhost:5173 (também exposto na rede local)
-npm test             # testes das regras (Vitest)
+npm test             # testes de regras e do backup (Vitest)
 npm run e2e          # build + testes de ponta a ponta (Playwright, tela de iPhone)
 npm run typecheck
 npm run build        # gera apps/web/dist
@@ -50,7 +50,23 @@ pelo IP da rede (`http://192.168.x.x:5173`) serve para ver a interface no celula
 Observações:
 - Os dados do app instalado ficam separados dos dados do Safari. Use sempre o ícone.
 - Apps instalados na tela inicial não têm os dados apagados automaticamente pelo iOS. Mesmo assim,
-  o backup em JSON e a sincronização com o servidor chegam na etapa 5.
+  faça backups: veja abaixo.
+
+## Backup dos dados
+
+Em **Ajustes → Backup**:
+
+- **Exportar dados (JSON)**: no iPhone abre a folha de compartilhamento; escolha **Salvar em Arquivos**
+  (ex.: iCloud Drive). No computador, o arquivo `rumo-backup-AAAA-MM-DD.json` é baixado.
+- **Importar dados (JSON)**: valida o arquivo antes de tudo e explica o que está errado, se for o caso.
+  Se for válido, mostra o que há no arquivo e no aparelho e pede confirmação antes de **substituir**
+  todos os dados. A troca é feita numa única transação: ou entra tudo, ou nada muda.
+
+O arquivo inclui todas as tabelas, inclusive registros excluídos (necessários para a sincronização futura).
+O formato tem versão (`"versao": 1`), e a validação fica em `packages/core/src/backup.ts`.
+
+Em **Ajustes → Armazenamento**, o app pede ao navegador armazenamento persistente
+(`navigator.storage.persist()`) e mostra o resultado.
 - Atualizações: o app se atualiza sozinho na próxima vez que for aberto com internet.
 
 ## Regras da tela "Hoje"
