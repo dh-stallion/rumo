@@ -1,0 +1,16 @@
+{
+  "name": "rumo",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @rumo/web",
+    "build": "npm run build -w @rumo/web",
+    "preview": "npm run preview -w @rumo/web",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}
