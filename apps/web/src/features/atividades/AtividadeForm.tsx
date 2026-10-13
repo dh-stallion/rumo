@@ -2,6 +2,7 @@ import {
   CATEGORIAS,
   combinarDataHora,
   formatar,
+  limitePadrao,
   paraDataLocal,
   ROTULO_CATEGORIA,
   type Atividade,
@@ -28,13 +29,17 @@ export function AtividadeForm({ atividade, onFechar }: { atividade?: Atividade; 
   const [categoria, setCategoria] = useState<Categoria>(atividade?.categoria ?? 'hobby');
   const [duracao, setDuracao] = useState(atividade?.duracaoPadraoMin ?? 30);
   const [meta, setMeta] = useState(atividade?.metaSemanal ?? 0);
-  const [limite, setLimite] = useState(atividade?.limiteDias ?? 0);
+  // Texto livre: vazio = usar o padrão derivado da meta.
+  const [limite, setLimite] = useState(atividade?.limiteDias ? String(atividade.limiteDias) : '');
+  const limiteNum = Number(limite);
+  const limiteValido = limite === '' || (Number.isInteger(limiteNum) && limiteNum >= 1 && limiteNum <= 365);
+  const padrao = limitePadrao(meta);
   const [cor, setCor] = useState(atividade?.cor ?? CORES[0]!);
   const [pausada, setPausada] = useState(atividade?.pausada ?? false);
 
   async function salvar(e: FormEvent) {
     e.preventDefault();
-    if (!nome.trim()) return;
+    if (!nome.trim() || !limiteValido) return;
     const dados: Dados<Atividade> = {
       nome: nome.trim(),
       categoria,
@@ -42,7 +47,7 @@ export function AtividadeForm({ atividade, onFechar }: { atividade?: Atividade; 
       metaSemanal: meta,
       cor,
       pausada,
-      limiteDias: limite > 0 ? limite : null,
+      limiteDias: limite === '' ? null : limiteNum,
     };
     if (atividade) await atualizar(db.atividades, atividade.id, dados);
     else await criar(db.atividades, dados);
@@ -87,13 +92,22 @@ export function AtividadeForm({ atividade, onFechar }: { atividade?: Atividade; 
         />
       </Campo>
 
-      <Campo rotulo="Lembrar quando ficar parada" dica="Aparece em Hoje quando passar desse número de dias sem sessão.">
-        <Stepper
-          rotulo="Lembrar quando ficar parada"
-          valor={limite}
-          onChange={setLimite}
-          max={90}
-          formatar={(v) => (v === 0 ? 'Não lembrar' : `Mais de ${v} ${v === 1 ? 'dia' : 'dias'}`)}
+      <Campo
+        rotulo="Lembrar depois de quantos dias parada"
+        dica={
+          limiteValido
+            ? `Em branco, usa o padrão pela meta: ${padrao} dias. Para parar os lembretes, pause a atividade.`
+            : 'Use um número inteiro de 1 a 365.'
+        }
+      >
+        <input
+          className={`${classeInput} ${limiteValido ? '' : 'border-red-500'}`}
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={limite}
+          onChange={(e) => setLimite(e.target.value.replace(/\D/g, ''))}
+          placeholder={`Padrão: ${padrao} dias`}
+          aria-invalid={!limiteValido}
         />
       </Campo>
 
@@ -130,7 +144,7 @@ export function AtividadeForm({ atividade, onFechar }: { atividade?: Atividade; 
       )}
 
       <div className="flex gap-2 pt-1">
-        <Botao type="submit" variante="primario" className="flex-1" disabled={!nome.trim()}>
+        <Botao type="submit" variante="primario" className="flex-1" disabled={!nome.trim() || !limiteValido}>
           Salvar
         </Botao>
         {atividade && (

@@ -1,4 +1,4 @@
-import type { Adiamento, Atividade, Evento, Pessoa, Sessao } from '@rumo/core';
+import type { Adiamento, Atividade, Evento, Pessoa, Preferencias, Sessao } from '@rumo/core';
 import Dexie, { type Table } from 'dexie';
 
 export class RumoDB extends Dexie {
@@ -7,9 +7,10 @@ export class RumoDB extends Dexie {
   pessoas!: Table<Pessoa, string>;
   eventos!: Table<Evento, string>;
   adiamentos!: Table<Adiamento, string>;
+  preferencias!: Table<Preferencias, string>;
 
-  constructor() {
-    super('rumo');
+  constructor(nome = 'rumo') {
+    super(nome);
     // Só campos consultados viram índice; `atualizadoEm` serve à sincronização da etapa 5.
     this.version(1).stores({
       atividades: 'id, atualizadoEm',
@@ -18,6 +19,7 @@ export class RumoDB extends Dexie {
       eventos: 'id, inicio, atualizadoEm',
       adiamentos: 'id, atualizadoEm',
     });
+    this.version(2).stores({ preferencias: 'id, atualizadoEm' });
   }
 }
 

@@ -28,7 +28,7 @@ export interface Atividade extends Registro {
   metaSemanal: number;
   cor: string;
   pausada: boolean;
-  /** Avisar quando passar deste número de dias sem sessão; null = nunca avisar. */
+  /** Avisar quando passar deste número de dias sem sessão; null = padrão derivado da meta. */
   limiteDias: number | null;
 }
 
@@ -68,6 +68,16 @@ export interface Adiamento extends Registro {
   /** O item volta a aparecer em "Hoje" a partir deste instante. */
   ate: ISODateTime;
 }
+
+/** 0 = domingo … 6 = sábado (convenção do date-fns). */
+export type DiaSemana = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+/** Preferências que afetam as regras; registro único, sincronizável como os demais. */
+export interface Preferencias extends Registro {
+  inicioSemana: DiaSemana;
+}
+
+export const ID_PREFERENCIAS = 'preferencias';
 
 /** Id determinístico: um adiamento por alvo, o que simplifica o upsert e a sincronização. */
 export const idAdiamento = (alvoTipo: AlvoAdiamento, alvoId: string) => `${alvoTipo}:${alvoId}`;

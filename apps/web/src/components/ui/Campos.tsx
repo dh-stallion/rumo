@@ -34,7 +34,7 @@ export function Segmentado<T extends string>({
           role="radio"
           aria-checked={valor === o.valor}
           onClick={() => onChange(o.valor)}
-          className={`min-h-10 flex-1 rounded-lg text-[15px] font-medium transition-colors ${
+          className={`min-h-11 flex-1 rounded-lg text-[15px] font-medium transition-colors ${
             valor === o.valor
               ? 'bg-white shadow-sm dark:bg-neutral-600'
               : 'text-neutral-600 dark:text-neutral-400'

@@ -7,11 +7,14 @@
     "dev": "vite",
     "build": "tsc --noEmit -p . && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p .",
-    "icons": "pwa-assets-generator"
+    "typecheck": "tsc --noEmit -p . && tsc --noEmit -p e2e",
+    "icons": "pwa-assets-generator",
+    "e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vite-pwa/assets-generator": "^2.0.0",

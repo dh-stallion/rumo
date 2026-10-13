@@ -1,10 +1,10 @@
 import {
-  diaDaSemana,
   eventosDoDia,
   formatar,
   inicioDoDiaApos,
   itensDeAtencao,
   paraHoraLocal,
+  posicaoNaSemana,
   type AlvoAdiamento,
   type ItemHoje,
 } from '@rumo/core';
@@ -18,12 +18,14 @@ import { Sheet } from '../../components/ui/Sheet';
 import { useToast } from '../../components/ui/Toast';
 import { adiar, pausar, registrarContato, registrarSessao } from '../../db/acoes';
 import { db } from '../../db/db';
+import { useCalendario } from '../../db/preferencias';
 import { excluir, useLista } from '../../db/repo';
 
 type Alvo = { tipo: AlvoAdiamento; id: string; nome: string };
 
 export function HojePage() {
   const agora = useAgora();
+  const cal = useCalendario();
   const atividades = useLista(db.atividades);
   const sessoes = useLista(db.sessoes);
   const pessoas = useLista(db.pessoas);
@@ -37,7 +39,7 @@ export function HojePage() {
     return <Pagina titulo="Hoje" subtitulo={subtitulo}>{null}</Pagina>;
   }
 
-  const itens = itensDeAtencao({ atividades, sessoes, pessoas, adiamentos }, agora);
+  const itens = itensDeAtencao({ atividades, sessoes, pessoas, adiamentos }, agora, cal);
   const deHoje = eventosDoDia(eventos, agora);
   const nomePessoa = (id: string | null) => pessoas.find((p) => p.id === id)?.nome;
 
@@ -79,7 +81,7 @@ export function HojePage() {
         )}
       </Secao>
 
-      <AdiarSheet alvo={adiando} agora={agora} onFechar={() => setAdiando(null)} />
+      <AdiarSheet alvo={adiando} agora={agora} diasAteProximaSemana={7 - posicaoNaSemana(agora, cal)} onFechar={() => setAdiando(null)} />
     </Pagina>
   );
 }
@@ -88,8 +90,9 @@ function CartaoHoje({ item, onAdiar }: { item: ItemHoje; onAdiar: (a: Alvo) => v
   const toast = useToast();
 
   if (item.tipo === 'atividade') {
-    const { atividade: a, diasSemSessao, progresso } = item;
+    const { atividade: a, nuncaPraticada, diasSemSessao, progresso } = item;
     const motivos = [
+      nuncaPraticada && 'Ainda não praticou',
       diasSemSessao !== null && `Última vez ${haDias(diasSemSessao)}`,
       progresso && `${progresso.feitas} de ${progresso.meta} esta semana`,
     ].filter(Boolean);
@@ -177,12 +180,22 @@ function Cartao({
   );
 }
 
-function AdiarSheet({ alvo, agora, onFechar }: { alvo: Alvo | null; agora: Date; onFechar: () => void }) {
+function AdiarSheet({
+  alvo,
+  agora,
+  diasAteProximaSemana,
+  onFechar,
+}: {
+  alvo: Alvo | null;
+  agora: Date;
+  diasAteProximaSemana: number;
+  onFechar: () => void;
+}) {
   const toast = useToast();
   const opcoes = [
     { rotulo: 'Amanhã', dias: 1 },
     { rotulo: 'Em 3 dias', dias: 3 },
-    { rotulo: 'Semana que vem', dias: 8 - diaDaSemana(agora) },
+    { rotulo: 'Semana que vem', dias: diasAteProximaSemana },
   ];
   return (
     <Sheet aberto={alvo !== null} onFechar={onFechar} titulo={alvo ? `Adiar ${alvo.nome}` : 'Adiar'}>

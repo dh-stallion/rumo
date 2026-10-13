@@ -19,10 +19,14 @@ Requer Node 22+.
 npm install
 npm run dev          # http://localhost:5173 (também exposto na rede local)
 npm test             # testes das regras (Vitest)
+npm run e2e          # build + testes de ponta a ponta (Playwright, tela de iPhone)
 npm run typecheck
 npm run build        # gera apps/web/dist
 npm run preview      # serve o build em http://localhost:4173
 ```
+
+Os testes de ponta a ponta usam o Edge instalado na máquina, com o relógio fixado numa terça-feira.
+Para usar o Chrome: `PW_CHANNEL=chrome npm run e2e`.
 
 Os ícones do PWA são gerados a partir de `apps/web/public/logo.svg`:
 
@@ -52,13 +56,17 @@ Observações:
 ## Regras da tela "Hoje"
 
 Ficam em `packages/core/src/rules`, cobertas por testes. Todas as contas usam dias de calendário no fuso
-`America/Sao_Paulo`, e a semana vai de segunda a domingo. Só contam sessões **registradas** ("fiz hoje"):
-sessões planejadas não contam como feitas.
+`America/Sao_Paulo`. A semana começa na segunda por padrão e pode ser trocada em **Ajustes**.
+Só contam sessões **registradas** ("fiz hoje"): sessões planejadas não contam como feitas.
+
+Uma atividade só deixa de aparecer em "Hoje" se estiver **pausada**, **adiada** ou **já feita hoje**.
 
 | Regra | Quando aparece |
 |---|---|
-| Atividade parada | A atividade tem um limite de N dias e já se passaram **mais de N** dias desde a última sessão. Sem limite, nunca aparece. Sem nenhuma sessão, conta a partir do cadastro. |
-| Meta semanal | O ritmo ficou para trás (`feitas < ⌊meta × dias encerrados / 7⌋`) **ou** não sobra folga (o que falta exige fazer em todos os dias restantes, incluindo hoje). Ex.: meta 3 sem nada feito aparece na quinta. Meta 1 só aparece no domingo. |
+| Ainda não praticou | A atividade nunca teve sessão registrada. Aparece logo depois do cadastro. |
+| Atividade parada | Passaram **mais de N** dias desde a última sessão. N é o limite da atividade ou, se estiver em branco, o padrão pela meta: `⌈7 / meta⌉ + 2` (meta 1 → 9, meta 3 → 5, meta 7 → 3). Sem meta, 14. |
+| Meta 1x por semana | Nada feito na semana e já é **sexta ou depois**. |
+| Outras metas | O ritmo ficou para trás (`feitas < ⌊meta × dias encerrados / 7⌋`) **ou** não sobra folga (o que falta exige fazer em todos os dias restantes, incluindo hoje). Ex.: meta 3 sem nada feito aparece na quinta. |
 | Contato | Passaram **N dias ou mais** desde o último contato, sendo N a frequência desejada. |
 | Já feito hoje | A atividade sai de "Hoje" até o dia seguinte, mesmo que a meta da semana esteja apertada. |
 

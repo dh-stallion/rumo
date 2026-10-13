@@ -17,6 +17,7 @@ import { Sheet } from '../../components/ui/Sheet';
 import { useToast } from '../../components/ui/Toast';
 import { pausar, registrarSessao } from '../../db/acoes';
 import { db } from '../../db/db';
+import { useCalendario } from '../../db/preferencias';
 import { excluir, useLista } from '../../db/repo';
 import { AtividadeForm } from './AtividadeForm';
 
@@ -92,11 +93,12 @@ function Lista({
   onEditar: (a: Atividade) => void;
 }) {
   const toast = useToast();
+  const cal = useCalendario();
   return (
     <ul className={`${classeCartao} divide-y divide-black/5 dark:divide-white/10`}>
       {itens.map((a) => {
         const ultima = ultimaSessao(a.id, sessoes, agora);
-        const { feitas } = progressoSemanal(a, sessoes, agora);
+        const { feitas } = progressoSemanal(a, sessoes, agora, cal);
         const resumo = [
           a.metaSemanal > 0 && `${feitas} de ${a.metaSemanal} esta semana`,
           ultima ? `última ${haDias(diasEntre(new Date(ultima.inicio), agora))}` : 'nenhuma sessão ainda',

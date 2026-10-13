@@ -1,5 +1,5 @@
 import type { Atividade, Sessao } from '../model';
-import { diaDaSemana, FUSO_PADRAO, inicioDaSemana } from '../time';
+import { CALENDARIO_PADRAO, inicioDaSemana, posicaoDoDia, posicaoNaSemana } from '../time';
 import { sessoesFeitas } from './atraso';
 
 export interface ProgressoSemanal {
@@ -12,32 +12,38 @@ export interface ProgressoSemanal {
   atrasada: boolean;
 }
 
+const SEXTA = 5;
+
 /**
  * A meta pede atenção quando:
- * - o ritmo ficou para trás: feitas < floor(meta × diasEncerrados / 7); ou
- * - não sobra folga: o que falta exige fazer em todos os dias restantes (incluindo hoje).
+ * - meta 1x: nada feito na semana e já é sexta ou depois (na semana configurada);
+ * - demais metas: o ritmo ficou para trás (feitas < floor(meta × diasEncerrados / 7))
+ *   ou não sobra folga (o que falta exige todos os dias restantes, incluindo hoje).
  *
- * Ex.: meta 3 sem nada feito → aparece na quinta. Meta 1 → só no domingo.
+ * Ex. (semana começando na segunda): meta 3 sem nada feito aparece na quinta.
  */
 export function progressoSemanal(
   atividade: Atividade,
   sessoes: readonly Sessao[],
   agora: Date,
-  fuso = FUSO_PADRAO,
+  cal = CALENDARIO_PADRAO,
 ): ProgressoSemanal {
-  const inicio = inicioDaSemana(agora, fuso);
+  const inicio = inicioDaSemana(agora, cal);
   const feitas = sessoesFeitas(atividade.id, sessoes, agora).filter(
     (s) => new Date(s.inicio) >= inicio,
   ).length;
   const meta = atividade.metaSemanal;
-  const dia = diaDaSemana(agora, fuso);
-  const diasRestantes = 8 - dia;
-  const esperadoPeloRitmo = Math.floor((meta * (dia - 1)) / 7);
+  const pos = posicaoNaSemana(agora, cal);
+  const diasRestantes = 7 - pos;
+  const esperadoPeloRitmo = Math.floor((meta * pos) / 7);
   const faltam = meta - feitas;
-  const atrasada =
-    !atividade.pausada &&
-    meta > 0 &&
-    faltam > 0 &&
-    (feitas < esperadoPeloRitmo || faltam >= diasRestantes);
+
+  let atrasada = false;
+  if (!atividade.pausada && meta > 0 && faltam > 0) {
+    atrasada =
+      meta === 1
+        ? pos >= posicaoDoDia(SEXTA, cal)
+        : feitas < esperadoPeloRitmo || faltam >= diasRestantes;
+  }
   return { feitas, meta, esperadoPeloRitmo, diasRestantes, atrasada };
 }
