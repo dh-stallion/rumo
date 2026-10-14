@@ -14,3 +14,4 @@ export * from './calendario/recorrencia';
 export * from './calendario/eventos';
 export * from './calendario/series';
 export * from './calendario/repeticao';
+export * from './calendario/mes';

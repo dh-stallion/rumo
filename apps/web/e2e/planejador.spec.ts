@@ -37,7 +37,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await novaAtividade(page, { nome: 'Violão', meta: 3 });
   await novaAtividade(page, { nome: 'Inglês', categoria: 'Estudo' });
-  await irPara(page, 'Semana');
+  await irPara(page, 'Calendário');
   await rolarGradePara(page, 7);
 });
 

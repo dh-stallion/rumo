@@ -18,7 +18,10 @@ export function GradeSemanal({
   modo,
   refRolagem,
   renderDia,
+  foco,
 }: {
+  /** Dia (AAAA-MM-DD) a deixar como primeira coluna visível; sem ele, hoje. */
+  foco?: string;
   dias: Date[];
   agora: Date;
   modo: ModoGrade;
@@ -35,13 +38,13 @@ export function GradeSemanal({
   useLayoutEffect(() => {
     const el = rolagem.current;
     if (!el) return;
-    const colunaHoje = el.querySelector<HTMLElement>('[data-hoje="true"]');
-    el.scrollLeft = colunaHoje ? colunaHoje.offsetLeft - LARGURA_HORAS : 0;
+    const coluna = el.querySelector<HTMLElement>(foco ? `[data-dia="${foco}"]` : '[data-hoje="true"]');
+    el.scrollLeft = coluna ? coluna.offsetLeft - LARGURA_HORAS : 0;
     if (!jaRolouVertical.current) {
       el.scrollTop = 7 * HORA_PX - 8;
       jaRolouVertical.current = true;
     }
-  }, [chaveSemana, modo]);
+  }, [chaveSemana, modo, foco]);
 
   const largura =
     modo === 'semana'

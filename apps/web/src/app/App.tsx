@@ -10,7 +10,7 @@ import { useTemaAplicado } from './tema';
 
 const abas: { para: string; rotulo: string; Icone: LucideIcon }[] = [
   { para: '/', rotulo: 'Hoje', Icone: Sun },
-  { para: '/semana', rotulo: 'Semana', Icone: CalendarDays },
+  { para: '/semana', rotulo: 'Calendário', Icone: CalendarDays },
   { para: '/atividades', rotulo: 'Atividades', Icone: Sparkles },
   { para: '/pessoas', rotulo: 'Pessoas', Icone: Users },
   { para: '/ajustes', rotulo: 'Ajustes', Icone: Settings },

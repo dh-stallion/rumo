@@ -3,7 +3,7 @@ import { card, cards, expect, irPara, novaAtividade, test } from './apoio';
 
 /** Agenda pelo fluxo sem arrastar (banco → folha). */
 async function agendar(page: Page, nome: string, dia: string, hora: string) {
-  await irPara(page, 'Semana');
+  await irPara(page, 'Calendário');
   const botao = page.getByRole('button', { name: 'Banco de afazeres' });
   if ((await botao.getAttribute('aria-expanded')) !== 'true') await botao.tap();
   const banco = page.getByRole('region', { name: 'Banco de afazeres' });
@@ -17,7 +17,7 @@ async function agendar(page: Page, nome: string, dia: string, hora: string) {
 }
 
 async function contadorDoBanco(page: Page, nome: string) {
-  await irPara(page, 'Semana');
+  await irPara(page, 'Calendário');
   const botao = page.getByRole('button', { name: 'Banco de afazeres' });
   if ((await botao.getAttribute('aria-expanded')) !== 'true') await botao.tap();
   return page.getByRole('region', { name: 'Banco de afazeres' }).getByRole('button', { name: new RegExp(`^${nome},`) });
@@ -75,7 +75,7 @@ test('"Feito" pela folha da sessão (futura) registra agora e tira o card de Hoj
   await expect(proximos).toContainText('Nada marcado para os próximos 7 dias.');
 
   // Sessão futura marcada como feita passa a terminar agora (12:00).
-  await irPara(page, 'Semana');
+  await irPara(page, 'Calendário');
   await expect(page.locator('[data-dia="2026-10-13"]').getByRole('button', { name: 'Violão, 11:30–12:00, feito' })).toBeAttached();
 
   // Desfazer devolve para quinta, planejada.

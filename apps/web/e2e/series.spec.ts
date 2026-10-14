@@ -6,7 +6,7 @@ const bloco = (page: Page, dia: string, nome: string | RegExp) =>
 
 /** Aula toda terça e quinta, 19:00–21:00, a partir de 13/10. */
 async function criarAula(page: Page) {
-  await irPara(page, 'Semana');
+  await irPara(page, 'Calendário');
   await page.getByRole('button', { name: 'Novo evento' }).tap();
   const folha = page.getByRole('dialog', { name: 'Novo evento' });
   await folha.getByRole('textbox', { name: 'Título' }).fill('Aula');

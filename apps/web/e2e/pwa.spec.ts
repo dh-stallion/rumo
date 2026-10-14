@@ -22,7 +22,7 @@ test('persiste, funciona offline e troca de tema', async ({ page, context }) => 
 test('áreas de toque de pelo menos 44px em todas as abas', async ({ page }) => {
   await page.goto('/');
   await novaAtividade(page, { nome: 'Violão', meta: 3 });
-  for (const aba of ['Hoje', 'Semana', 'Atividades', 'Pessoas', 'Ajustes'] as const) {
+  for (const aba of ['Hoje', 'Calendário', 'Atividades', 'Pessoas', 'Ajustes'] as const) {
     await irPara(page, aba);
     await page.waitForLoadState('networkidle');
     const pequenos = await page.evaluate(() =>
