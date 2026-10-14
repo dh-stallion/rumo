@@ -7,7 +7,7 @@ import {
   proximosCompromissos,
   type AlvoAdiamento,
   type Compromisso,
-  type Evento,
+  type EventoNaAgenda,
   type ItemHoje,
   type Sessao,
 } from '@rumo/core';
@@ -39,7 +39,7 @@ export function HojePage() {
   const adiamentos = useLista(db.adiamentos);
   const eventos = useLista(db.eventos);
   const [adiando, setAdiando] = useState<Alvo | null>(null);
-  const [editandoEvento, setEditandoEvento] = useState<Evento | 'novo' | null>(null);
+  const [editandoEvento, setEditandoEvento] = useState<EventoNaAgenda | 'novo' | null>(null);
   const [sessaoAberta, setSessaoAberta] = useState<string | null>(null);
 
   const subtitulo = formatar(agora, "EEEE, d 'de' MMMM");

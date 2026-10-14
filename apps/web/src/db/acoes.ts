@@ -6,8 +6,10 @@ import {
   planejadaDeHoje,
   type AlvoAdiamento,
   type Atividade,
+  type Evento,
   type Intervalo,
   type Pessoa,
+  type PlanoSerie,
   type Sessao,
 } from '@rumo/core';
 import { db } from './db';
@@ -93,4 +95,26 @@ export async function registrarFeito(atividade: Atividade, sessoes: readonly Ses
   if (planejada) return marcarFeita(planejada);
   const s = await registrarSessao(atividade);
   return () => excluir(db.sessoes, s.id);
+}
+
+/**
+ * Aplica um plano de edição de série numa transação. O desfazer restaura os
+ * registros como estavam e remove os criados.
+ */
+export async function aplicarPlano(plano: PlanoSerie) {
+  const t = new Date().toISOString();
+  let antes: Evento[] = [];
+  await db.transaction('rw', db.eventos, async () => {
+    const ids = [...new Set([...plano.atualizar.map((a) => a.id), ...plano.excluir])];
+    antes = (await db.eventos.bulkGet(ids)).filter((e): e is Evento => !!e);
+    for (const c of plano.criar) await db.eventos.add({ ...c, criadoEm: t, atualizadoEm: t, excluidoEm: null });
+    for (const a of plano.atualizar) await db.eventos.update(a.id, { ...a.mudancas, atualizadoEm: t });
+    for (const id of plano.excluir) await db.eventos.update(id, { excluidoEm: t, atualizadoEm: t });
+  });
+  return () =>
+    db.transaction('rw', db.eventos, async () => {
+      const agora = new Date().toISOString();
+      await db.eventos.bulkPut(antes.map((e) => ({ ...e, atualizadoEm: agora })));
+      for (const c of plano.criar) await db.eventos.update(c.id, { excluidoEm: agora, atualizadoEm: agora });
+    });
 }

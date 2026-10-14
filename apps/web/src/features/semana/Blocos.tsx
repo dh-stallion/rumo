@@ -1,5 +1,5 @@
-import { paraHoraLocal, type Atividade, type Evento, type Sessao } from '@rumo/core';
-import { AlertTriangle, Check, Lock } from 'lucide-react';
+import { paraHoraLocal, type Atividade, type Evento, type EventoNaAgenda, type Sessao } from '@rumo/core';
+import { AlertTriangle, Check, Lock, Repeat } from 'lucide-react';
 import type { CSSProperties, HTMLAttributes, ReactNode, Ref } from 'react';
 import { ALTURA_MINIMA_BLOCO, minParaPx, type BlocoNoDia } from './geometria';
 
@@ -16,7 +16,7 @@ export function estiloBloco(b: BlocoNoDia<unknown>): CSSProperties {
 
 const faixaHorario = (i: { inicio: string; fim: string }) => `${paraHoraLocal(i.inicio)}–${paraHoraLocal(i.fim)}`;
 
-export function BlocoEvento({ bloco, onAbrir }: { bloco: BlocoNoDia<Evento>; onAbrir: (e: Evento) => void }) {
+export function BlocoEvento({ bloco, onAbrir }: { bloco: BlocoNoDia<EventoNaAgenda>; onAbrir: (e: EventoNaAgenda) => void }) {
   const e = bloco.item;
   const alto = minParaPx(bloco.fimMin - bloco.inicioMin) >= 40;
   return (
@@ -24,7 +24,7 @@ export function BlocoEvento({ bloco, onAbrir }: { bloco: BlocoNoDia<Evento>; onA
       type="button"
       data-bloco="evento"
       onClick={() => onAbrir(e)}
-      aria-label={`${e.titulo}, ${faixaHorario(e)}${e.fixo ? ', fixo' : ''}`}
+      aria-label={`${e.titulo}, ${faixaHorario(e)}${e.fixo ? ', fixo' : ''}${e.ocorrencia ? ', repete' : ''}`}
       style={estiloBloco(bloco)}
       className={`absolute z-[1] overflow-hidden rounded-md px-1.5 py-0.5 text-left text-xs leading-tight select-none ${
         e.fixo
@@ -34,6 +34,7 @@ export function BlocoEvento({ bloco, onAbrir }: { bloco: BlocoNoDia<Evento>; onA
     >
       <span className="flex items-start gap-1">
         {e.fixo && <Lock size={11} className="mt-px shrink-0" aria-hidden />}
+        {e.ocorrencia && <Repeat size={11} className="mt-px shrink-0" aria-hidden />}
         <span className="truncate font-semibold">{e.titulo}</span>
       </span>
       {alto && <span className="block truncate opacity-75">{faixaHorario(e)}</span>}

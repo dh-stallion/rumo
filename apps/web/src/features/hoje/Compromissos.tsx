@@ -1,5 +1,5 @@
 import { paraHoraLocal, rotuloDia, type Compromisso, type DiaDeCompromissos, type Pessoa } from '@rumo/core';
-import { Lock, Plus } from 'lucide-react';
+import { Lock, Plus, Repeat } from 'lucide-react';
 import { Botao } from '../../components/ui/Botao';
 import { classeCartao } from '../../components/ui/Pagina';
 
@@ -32,6 +32,9 @@ export function ListaCompromissos({
                 {pessoa && <span className="block truncate text-sm text-neutral-500">com {pessoa}</span>}
                 {c.tipo === 'sessao' && <span className="block text-sm text-neutral-500">planejado</span>}
               </span>
+              {c.tipo === 'evento' && c.evento.ocorrencia && (
+                <Repeat size={16} className="shrink-0 text-neutral-400" role="img" aria-label="Repete" />
+              )}
               {c.fixo && <Lock size={16} className="shrink-0 text-neutral-400" role="img" aria-label="Fixo" />}
             </button>
           </li>

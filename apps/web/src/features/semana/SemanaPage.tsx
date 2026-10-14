@@ -56,7 +56,7 @@ export function SemanaPage() {
   // Visão de 7 colunas em tela cheia ("Planejar a semana"); na URL para Hoje poder abrir direto.
   const [params, setParams] = useSearchParams();
   const telaCheia = params.get('planejar') === '1';
-  const [editandoEvento, setEditandoEvento] = useState<Evento | 'novo' | null>(null);
+  const [editandoEvento, setEditandoEvento] = useState<EventoNaAgenda | 'novo' | null>(null);
   const [agendando, setAgendando] = useState<Atividade | null>(null);
   const [sessaoAberta, setSessaoAberta] = useState<string | null>(null);
   const [bancoAberto, setBancoAberto] = useState(false);
@@ -232,7 +232,7 @@ function ConteudoDia({
   atividades: Map<string, Atividade>;
   ativo: DadosArraste | null;
   alvo: Alvo | null;
-  onAbrirEvento: (e: Evento) => void;
+  onAbrirEvento: (e: EventoNaAgenda) => void;
   onAbrirSessao: (s: Sessao) => void;
 }) {
   // Eventos e sessões dividem as faixas juntos: um conflito aparece lado a lado, não sobreposto.
