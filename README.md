@@ -53,11 +53,16 @@ Observações:
   faça backups: veja abaixo.
 - Atualizações: o app se atualiza sozinho na próxima vez que for aberto com internet.
 
-## Calendário (semana e mês)
+## Navegação
 
-A aba **Calendário** alterna entre **Semana** (a grade do planejador, abaixo) e **Mês**: semanas
-completas com uma marca por compromisso em cada dia (eventos em cinza, sessões na cor da atividade).
-Tocar num dia lista o que há nele; **Ver na semana** abre a semana daquele dia.
+A barra de abas tem **Hoje · Calendário · Planos · Atividades**. **Ajustes** fica na engrenagem no canto
+de Hoje, e **Pessoas** é a terceira visão de Calendário (Semana | Mês | Pessoas).
+
+## Calendário (semana, mês e pessoas)
+
+A aba **Calendário** alterna entre **Semana** (a grade do planejador, abaixo), **Mês** e **Pessoas**. No mês,
+semanas completas com uma marca por compromisso em cada dia (eventos em cinza, sessões na cor da
+atividade ou do projeto). Tocar num dia lista o que há nele; **Ver na semana** abre a semana daquele dia.
 
 **Eventos recorrentes**: no formulário, **Repetir** oferece todo dia, dias úteis, toda semana (escolhendo
 os dias), a cada 2 semanas, todo mês (no dia N ou na Nª segunda/terça…), todo ano. **Termina** nunca,
@@ -76,9 +81,13 @@ Regras de fora com outras partes (ex.: BYSETPOS) aparecem só na primeira data, 
 
 ### Levar para o Calendário do iPhone
 
-Em **Ajustes → Calendário do iPhone → Exportar calendário (.ics)**: escolha **Salvar em Arquivos**,
+Em **Ajustes → Calendário (.ics) → Exportar calendário (.ics)**: escolha **Salvar em Arquivos**,
 abra o arquivo no app **Arquivos** e toque em **Adicionar todos**. É uma cópia: o que mudar depois no
 Rumo não aparece lá. Sessões planejadas podem ir junto (categoria "Atividade").
+
+**Importar .ics** (mesma seção) traz eventos de outro calendário ou de um export do próprio Rumo. Mostra
+uma prévia (novos, já existentes, avisos de regras não suportadas) e pede confirmação. O mesmo UID
+atualiza em vez de duplicar, e tudo pode ser desfeito.
 
 A **assinatura** que se atualiza sozinha (feed `webcal://…/feed/<token>.ics`) depende do servidor da
 etapa 5. O gerador já está pronto em `core` (`gerarICS(…, { feed: true })`).
@@ -117,6 +126,28 @@ em **Ajustes → Calendário**.
 
 As sessões planejadas de hoje aparecem no topo de **Hoje**, e as dos próximos 7 dias em
 **Próximos compromissos**.
+
+## Planos: projetos e metas
+
+**Projetos** (Planos → Projetos) são planos de longo prazo com:
+
+- **Próximas ações**: cada uma tem uma duração e pode virar sessão na grade, pelo botão de agendar na
+  página do projeto ou arrastando do **banco de afazeres** (grupo Projetos). Ações concluídas saem do banco.
+- **Marcos** com data opcional; os vencidos e em aberto aparecem destacados.
+- **Itens e preços** (ex.: as peças de um NAS), com total, comprado e quanto falta comprar.
+
+Arquivar um projeto tira o projeto da lista principal e as ações do banco.
+
+**Metas financeiras** (Planos → Metas) são sempre **em reais**. Para comprar euros, a meta é quanto você
+pretende gastar em reais (anote a cotação no aporte, se quiser). Com o alvo, o prazo e o que já está
+guardado, o app calcula:
+
+- quanto guardar **por mês** (meses até o prazo, contando o atual) e **por semana**;
+- o progresso e se você está **no ritmo** (linha reta do valor inicial, na criação, até o alvo, no prazo).
+
+Aportes e retiradas são registrados na página da meta. Uma meta pode ser ligada a um projeto e usar
+como alvo a **soma dos itens** dele, que acompanha os preços atualizados. Os cálculos ficam em
+`packages/core/src/financas` (valores em centavos inteiros).
 
 ## Backup dos dados
 
@@ -167,5 +198,5 @@ Cada card tem **feito**, **adiar** (amanhã, em 3 dias, semana que vem) e **paus
 - [x] 1. Núcleo: atividades, pessoas, "fiz hoje" / "falei com", tela Hoje
 - [x] 2. Planejador semanal com arrastar e soltar
 - [x] 3. Calendário semana/mês, recorrência, exportação .ics (feed assinável e CalDAV dependem da etapa 5)
-- [ ] 4. Projetos e metas financeiras
+- [x] 4. Projetos e metas financeiras (metas em reais, sem cotação de moedas)
 - [ ] 5. Backend, sincronização, Web Push, Docker, backup

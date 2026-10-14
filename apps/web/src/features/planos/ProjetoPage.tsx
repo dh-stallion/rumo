@@ -33,6 +33,7 @@ import { useCalendario } from '../../db/preferencias';
 import { adicionar, editar, remover } from '../../db/projetos';
 import { useLista } from '../../db/repo';
 import { AgendarSheet } from '../semana/AgendarSheet';
+import { MetaDoProjeto } from './MetaDoProjeto';
 import { ProjetoForm } from './ProjetoForm';
 
 type Edicao =
@@ -200,6 +201,8 @@ function ConteudoProjeto({ projeto }: { projeto: Projeto }) {
           </dl>
         )}
       </Secao>
+
+      <MetaDoProjeto projeto={projeto} />
 
       <Sheet aberto={editandoProjeto} onFechar={() => setEditandoProjeto(false)} titulo="Editar projeto">
         {editandoProjeto && <ProjetoForm projeto={projeto} onFechar={() => setEditandoProjeto(false)} />}

@@ -4,6 +4,7 @@ import { ToastProvider } from '../components/ui/Toast';
 import { AjustesPage } from '../features/ajustes/AjustesPage';
 import { AtividadesPage } from '../features/atividades/AtividadesPage';
 import { HojePage } from '../features/hoje/HojePage';
+import { MetaPage } from '../features/planos/MetaPage';
 import { PlanosPage } from '../features/planos/PlanosPage';
 import { ProjetoPage } from '../features/planos/ProjetoPage';
 import { SemanaPage } from '../features/semana/SemanaPage';
@@ -55,6 +56,7 @@ export function App() {
             <Route path="/atividades" element={<AtividadesPage />} />
             <Route path="/planos" element={<PlanosPage />} />
             <Route path="/planos/projeto/:id" element={<ProjetoPage />} />
+            <Route path="/planos/meta/:id" element={<MetaPage />} />
             <Route path="/pessoas" element={<Navigate to="/semana?visao=pessoas" replace />} />
             <Route path="/semana" element={<SemanaPage />} />
             <Route path="/agenda" element={<Navigate to="/semana" replace />} />

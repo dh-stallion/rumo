@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router';
 import { Segmentado } from '../../components/ui/Campos';
-import { Pagina, Vazio } from '../../components/ui/Pagina';
+import { Pagina } from '../../components/ui/Pagina';
+import { MetasLista } from './MetasLista';
 import { ProjetosLista } from './ProjetosLista';
 
 type Aba = 'projetos' | 'metas';
@@ -26,9 +27,7 @@ export function PlanosPage() {
       {aba === 'projetos' ? (
         <ProjetosLista />
       ) : (
-        <Vazio>
-          <p className="text-base font-medium text-neutral-700 dark:text-neutral-300">Nenhuma meta ainda.</p>
-        </Vazio>
+        <MetasLista />
       )}
     </Pagina>
   );
