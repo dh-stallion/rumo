@@ -74,3 +74,73 @@ test('exporta série com exceções, evento com pessoa e sessões planejadas', a
   expect(semSessoes).not.toContain('CATEGORIES:Atividade');
   expect(semSessoes.match(/BEGIN:VEVENT/g)).toHaveLength(3);
 });
+
+async function importarICS(page: Page, conteudo: string, nome = 'agenda.ics') {
+  await irPara(page, 'Ajustes');
+  await page.getByLabel('Arquivo de calendário').setInputFiles({ name: nome, mimeType: 'text/calendar', buffer: Buffer.from(conteudo) });
+}
+
+test('importa um .ics de outro calendário, com aviso de regra não suportada e desfazer', async ({ page }) => {
+  const externo = [
+    'BEGIN:VCALENDAR',
+    'BEGIN:VEVENT',
+    'UID:abc@google.com',
+    'DTSTART:20261014T180000Z',
+    'DURATION:PT1H30M',
+    'SUMMARY:Call com o time',
+    'END:VEVENT',
+    'BEGIN:VEVENT',
+    'UID:mensal@google.com',
+    'DTSTART;TZID=America/Sao_Paulo:20261015T090000',
+    'DTEND;TZID=America/Sao_Paulo:20261015T100000',
+    'RRULE:FREQ=MONTHLY;BYDAY=TH;BYSETPOS=3',
+    'SUMMARY:Reunião mensal',
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n');
+  await importarICS(page, externo);
+  const previa = page.getByRole('dialog', { name: 'Importar eventos?' });
+  await expect(previa).toContainText('agenda.ics: 2 eventos novos (1 com repetição).');
+  await expect(previa.getByLabel('Avisos')).toContainText('"Reunião mensal": Parte da regra não suportada: BYSETPOS');
+  await previa.getByRole('button', { name: 'Importar' }).tap();
+  await expect(page.getByText('2 eventos importados')).toBeVisible();
+
+  await irPara(page, 'Calendário');
+  await expect(page.locator('[data-dia="2026-10-14"]').getByRole('button', { name: 'Call com o time, 15:00–16:30, fixo' })).toBeAttached();
+  await expect(page.locator('[data-dia="2026-10-15"]').getByRole('button', { name: /^Reunião mensal/ })).toBeAttached();
+
+  await irPara(page, 'Ajustes');
+  await page.getByRole('button', { name: 'Desfazer' }).tap();
+  await irPara(page, 'Calendário');
+  await expect(page.locator('[data-bloco="evento"]')).toHaveCount(0);
+});
+
+test('exportar, apagar e importar de volta; reimportar não duplica', async ({ page }) => {
+  await novaPessoa(page, { nome: 'Ana' });
+  await novoEvento(page, { titulo: 'Dentista', data: '2026-10-14', inicio: '15:00', fim: '16:00', pessoa: 'Ana' });
+  const ics = await exportarICS(page);
+
+  // Apaga o evento (e só ele) e importa o arquivo.
+  await irPara(page, 'Calendário');
+  await page.locator('[data-dia="2026-10-14"]').getByRole('button', { name: /^Dentista/ }).tap();
+  await page.getByRole('button', { name: 'Remover evento' }).tap();
+  await expect(page.locator('[data-bloco="evento"]')).toHaveCount(0);
+
+  await importarICS(page, ics);
+  const previa = page.getByRole('dialog', { name: 'Importar eventos?' });
+  await expect(previa).toContainText('1 já existe e será atualizado');
+  await previa.getByRole('button', { name: 'Importar' }).tap();
+  await importarICS(page, ics);
+  await expect(previa).toContainText('0 eventos novos, 1 já existe e será atualizado');
+  await previa.getByRole('button', { name: 'Importar' }).tap();
+
+  await irPara(page, 'Calendário');
+  await expect(page.locator('[data-bloco="evento"]')).toHaveCount(1);
+  await page.locator('[data-dia="2026-10-14"]').getByRole('button', { name: /^Dentista/ }).tap();
+  await expect(page.getByLabel('Com quem (opcional)')).toHaveValue(/.+/); // voltou ligado à Ana
+});
+
+test('arquivo que não é calendário é recusado', async ({ page }) => {
+  await importarICS(page, 'isto não é um calendário', 'nota.ics');
+  await expect(page.getByRole('dialog', { name: 'Não deu para importar' })).toContainText('Este arquivo não é um calendário (.ics).');
+});

@@ -17,3 +17,4 @@ export * from './calendario/repeticao';
 export * from './calendario/mes';
 export * from './calendario/ics';
 export * from './calendario/caldav';
+export * from './calendario/importacao';

@@ -8,6 +8,7 @@ import { Interruptor } from '../../components/ui/Campos';
 import { classeCartao, Secao } from '../../components/ui/Pagina';
 import { useToast } from '../../components/ui/Toast';
 import { db } from '../../db/db';
+import { ImportarCalendario } from './ImportarCalendario';
 
 /** Ajustes → exportar o calendário em .ics (e, na etapa 5, o feed assinável). */
 export function ExportarCalendario() {
@@ -36,7 +37,7 @@ export function ExportarCalendario() {
   }
 
   return (
-    <Secao titulo="Calendário do iPhone">
+    <Secao titulo="Calendário (.ics)">
       <div className={`${classeCartao} space-y-3 p-3`}>
         <Interruptor
           rotulo="Incluir sessões planejadas"
@@ -47,10 +48,11 @@ export function ExportarCalendario() {
         <Botao variante="primario" className="w-full" disabled={!pronto?.total} onClick={exportar}>
           <CalendarPlus size={18} /> Exportar calendário (.ics)
         </Botao>
+        <ImportarCalendario />
         <p className="text-xs text-neutral-500">
           {pronto?.total ? `${pronto.total} ${pronto.total === 1 ? 'item' : 'itens'} (séries contam uma vez).` : 'Nada para exportar ainda.'} No
           iPhone, escolha "Salvar em Arquivos" e toque no arquivo no app Arquivos para adicionar ao Calendário. É uma cópia:
-          mudanças feitas depois no Rumo não aparecem lá.
+          mudanças feitas depois no Rumo não aparecem lá. Importar traz eventos de um .ics (de outro calendário ou de um export do Rumo) sem duplicar.
         </p>
       </div>
       <div className={`${classeCartao} mt-3 flex items-start gap-3 p-3 text-sm`} aria-label="Assinatura do calendário">

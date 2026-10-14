@@ -9,6 +9,7 @@ import {
   type Evento,
   type Intervalo,
   type Pessoa,
+  type PlanoImportacao,
   type PlanoSerie,
   type Sessao,
 } from '@rumo/core';
@@ -116,5 +117,28 @@ export async function aplicarPlano(plano: PlanoSerie) {
       const agora = new Date().toISOString();
       await db.eventos.bulkPut(antes.map((e) => ({ ...e, atualizadoEm: agora })));
       for (const c of plano.criar) await db.eventos.update(c.id, { excluidoEm: agora, atualizadoEm: agora });
+    });
+}
+
+/**
+ * Importa eventos de um .ics numa transação: cria os novos e atualiza os que já existem
+ * (mesmo UID; um excluído volta a valer). O desfazer restaura o estado anterior.
+ */
+export async function importarEventos(plano: PlanoImportacao) {
+  const t = new Date().toISOString();
+  let antes: Evento[] = [];
+  await db.transaction('rw', db.eventos, async () => {
+    antes = (await db.eventos.bulkGet(plano.atualizar.map((e) => e.id))).filter((e): e is Evento => !!e);
+    const porId = new Map(antes.map((e) => [e.id, e]));
+    await db.eventos.bulkPut([
+      ...plano.novos.map((e) => ({ ...e, criadoEm: t, atualizadoEm: t, excluidoEm: null })),
+      ...plano.atualizar.map((e) => ({ ...e, criadoEm: porId.get(e.id)?.criadoEm ?? t, atualizadoEm: t, excluidoEm: null })),
+    ]);
+  });
+  return () =>
+    db.transaction('rw', db.eventos, async () => {
+      const agora = new Date().toISOString();
+      await db.eventos.bulkPut(antes.map((e) => ({ ...e, atualizadoEm: agora })));
+      for (const e of plano.novos) await db.eventos.update(e.id, { excluidoEm: agora, atualizadoEm: agora });
     });
 }
