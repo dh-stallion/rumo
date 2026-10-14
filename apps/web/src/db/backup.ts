@@ -12,6 +12,8 @@ export async function exportarBackup(db: RumoDB = dbPadrao, agora = new Date()):
       eventos: await db.eventos.toArray(),
       adiamentos: await db.adiamentos.toArray(),
       preferencias: await db.preferencias.toArray(),
+      projetos: await db.projetos.toArray(),
+      metas: await db.metas.toArray(),
     };
     return criarBackup(tabelas, agora);
   });
@@ -28,6 +30,8 @@ export async function importarBackup(backup: Backup, db: RumoDB = dbPadrao): Pro
     await db.eventos.bulkAdd(t.eventos);
     await db.adiamentos.bulkAdd(t.adiamentos);
     await db.preferencias.bulkAdd(t.preferencias);
+    await db.projetos.bulkAdd(t.projetos);
+    await db.metas.bulkAdd(t.metas);
   });
 }
 

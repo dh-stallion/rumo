@@ -15,7 +15,7 @@ import {
   paraDataLocal,
   posicionarNoDia,
   redimensionar,
-  type Atividade,
+  type Afazer,
   type Evento,
   type Intervalo,
   type Sessao,
@@ -51,9 +51,9 @@ export const alinharAoDedo: Modifier = ({ activatorEvent, draggingNodeRect, tran
 };
 
 export type DadosArraste =
-  | { tipo: 'banco'; atividade: Atividade }
-  | { tipo: 'sessao'; atividade: Atividade; sessao: Sessao }
-  | { tipo: 'redim'; atividade: Atividade; sessao: Sessao };
+  | { tipo: 'banco'; afazer: Afazer }
+  | { tipo: 'sessao'; afazer: Afazer; sessao: Sessao }
+  | { tipo: 'redim'; afazer: Afazer; sessao: Sessao };
 
 export interface Alvo {
   dia: string;
@@ -118,7 +118,7 @@ export function useArrasteNaGrade({
     const r = col.getBoundingClientRect();
     const dia = col.dataset.dia!;
     const minuto = pxParaMin(y - offsetY.current - r.top);
-    const duracao = dados.tipo === 'banco' ? dados.atividade.duracaoPadraoMin : duracaoMin(dados.sessao);
+    const duracao = dados.tipo === 'banco' ? dados.afazer.duracaoMin : duracaoMin(dados.sessao);
     const intervalo = posicionarNoDia(combinarDataHora(dia, '12:00'), minuto, duracao);
     return { dia, intervalo, conflitos: conflitosComFixos(intervalo, eventosRef.current) };
   }

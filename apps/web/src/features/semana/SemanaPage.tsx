@@ -1,5 +1,6 @@
 import { DndContext, DragOverlay, pointerWithin } from '@dnd-kit/core';
 import {
+  afazerDaSessao,
   ativo,
   chaveEvento,
   combinarDataHora,
@@ -8,11 +9,13 @@ import {
   diaCurto,
   duracaoMin,
   formatar,
+  indiceAfazeres,
   inicioDaSemana,
   inicioDoDiaApos,
   mesApos,
   paraDataLocal,
-  type Atividade,
+  type Afazer,
+  type IndiceAfazeres,
   type Compromisso,
   type Evento,
   type EventoNaAgenda,
@@ -56,6 +59,7 @@ export function SemanaPage() {
   const cal = useCalendario();
   const toast = useToast();
   const atividades = useLista(db.atividades);
+  const projetos = useLista(db.projetos);
   const sessoes = useLista(db.sessoes);
   const eventos = useLista(db.eventos);
   const pessoas = useLista(db.pessoas);
@@ -71,7 +75,7 @@ export function SemanaPage() {
   // Dia a deixar à vista ao abrir a semana (vindo de "Ver na semana").
   const [foco, setFoco] = useState<ISODate | undefined>(undefined);
   const [editandoEvento, setEditandoEvento] = useState<EventoNaAgenda | 'novo' | null>(null);
-  const [agendando, setAgendando] = useState<Atividade | null>(null);
+  const [agendando, setAgendando] = useState<Afazer | null>(null);
   const [sessaoAberta, setSessaoAberta] = useState<string | null>(null);
   const [bancoAberto, setBancoAberto] = useState(false);
   const [larguraColuna, setLarguraColuna] = useState(100);
@@ -82,7 +86,7 @@ export function SemanaPage() {
   const chave = paraDataLocal(inicio);
   // Recalcula só quando a semana muda (o "agora" anda a cada minuto).
   const dias = useMemo(() => Array.from({ length: 7 }, (_, i) => inicioDoDiaApos(inicio, i)), [chave]);
-  const porId = useMemo(() => new Map((atividades ?? []).map((a) => [a.id, a])), [atividades]);
+  const indice = useMemo(() => indiceAfazeres(atividades ?? [], projetos ?? []), [atividades, projetos]);
   const ehEstaSemana = deslocamento === 0;
   const ehEsteMes = formatar(mesRef, 'yyyy-MM') === formatar(agora, 'yyyy-MM');
 
@@ -108,15 +112,15 @@ export function SemanaPage() {
     const quando = `${diaCurto(alvo.intervalo.inicio)} ${formatar(alvo.intervalo.inicio, 'HH:mm')}`;
     const aviso = alvo.conflitos.length ? ` · conflito com ${alvo.conflitos.map((c) => c.titulo).join(', ')}` : '';
     if (dados.tipo === 'banco') {
-      const { desfazer } = await planejarSessao(dados.atividade, alvo.intervalo);
+      const { desfazer } = await planejarSessao(dados.afazer, alvo.intervalo);
       setBancoAberto(false); // deixa o resultado à vista; reabrir é um toque
-      toast({ texto: `${dados.atividade.nome}: ${quando}${aviso}`, acao: { rotulo: 'Desfazer', fn: desfazer } });
+      toast({ texto: `${dados.afazer.nome}: ${quando}${aviso}`, acao: { rotulo: 'Desfazer', fn: desfazer } });
       return;
     }
     if (alvo.intervalo.inicio === dados.sessao.inicio && alvo.intervalo.fim === dados.sessao.fim) return;
     const desfazer = await moverSessao(dados.sessao, alvo.intervalo);
     const texto =
-      dados.tipo === 'redim' ? `${dados.atividade.nome}: ${duracaoMin(alvo.intervalo)} min` : `${dados.atividade.nome}: ${quando}`;
+      dados.tipo === 'redim' ? `${dados.afazer.nome}: ${duracaoMin(alvo.intervalo)} min` : `${dados.afazer.nome}: ${quando}`;
     toast({ texto: `${texto}${aviso}`, acao: { rotulo: 'Desfazer', fn: desfazer } });
   }
 
@@ -220,7 +224,7 @@ export function SemanaPage() {
         {telaCheia && <div className="mt-1">{navegacao}</div>}
       </header>
 
-      {visaoMes && atividades && sessoes && eventos && pessoas && (
+      {visaoMes && atividades && projetos && sessoes && eventos && pessoas && (
         <MesView
           referencia={mesRef}
           selecionado={diaSelecionado}
@@ -228,7 +232,7 @@ export function SemanaPage() {
           cal={cal}
           eventos={eventos}
           sessoes={sessoes}
-          atividades={porId}
+          indice={indice}
           pessoas={pessoas}
           onSelecionar={setDiaSelecionado}
           onAbrir={abrirCompromisso}
@@ -249,7 +253,7 @@ export function SemanaPage() {
         onDragEnd={arraste.onDragEnd}
         onDragCancel={arraste.onDragCancel}
       >
-        {atividades && sessoes && eventos ? (
+        {atividades && projetos && sessoes && eventos ? (
           <GradeSemanal
             dias={dias}
             agora={agora}
@@ -262,7 +266,7 @@ export function SemanaPage() {
                 agora={agora}
                 eventos={eventos}
                 sessoes={sessoes}
-                atividades={porId}
+                indice={indice}
                 ativo={arraste.ativo}
                 alvo={arraste.alvo}
                 onAbrirEvento={(e) => !arraste.acabouDeArrastar() && setEditandoEvento(e)}
@@ -276,6 +280,7 @@ export function SemanaPage() {
 
         <BancoAfazeres
           atividades={atividades ?? []}
+          projetos={projetos ?? []}
           sessoes={sessoes ?? []}
           inicioSemana={inicio}
           aberto={bancoAberto}
@@ -288,8 +293,8 @@ export function SemanaPage() {
         <DragOverlay dropAnimation={null} modifiers={arraste.ativo?.tipo === 'banco' ? [alinharAoDedo] : []}>
           {arraste.ativo && arraste.ativo.tipo !== 'redim' && (
             <PreviaArraste
-              atividade={arraste.ativo.atividade}
-              duracao={arraste.ativo.tipo === 'banco' ? arraste.ativo.atividade.duracaoPadraoMin : duracaoMin(arraste.ativo.sessao)}
+              afazer={arraste.ativo.afazer}
+              duracao={arraste.ativo.tipo === 'banco' ? arraste.ativo.afazer.duracaoMin : duracaoMin(arraste.ativo.sessao)}
               alvo={arraste.alvo}
               largura={larguraColuna - 4}
             />
@@ -314,7 +319,7 @@ export function SemanaPage() {
       </Sheet>
 
       <Sheet aberto={agendando !== null} onFechar={() => setAgendando(null)} titulo={agendando ? `Agendar ${agendando.nome}` : 'Agendar'}>
-        {agendando && <AgendarSheet key={agendando.id} atividade={agendando} dias={dias} agora={agora} onFechar={() => setAgendando(null)} />}
+        {agendando && <AgendarSheet key={`${agendando.tipo}:${agendando.id}`} afazer={agendando} dias={dias} agora={agora} onFechar={() => setAgendando(null)} />}
       </Sheet>
 
       <SessaoSheet sessaoId={sessaoAberta} onFechar={() => setSessaoAberta(null)} />
@@ -327,7 +332,7 @@ function ConteudoDia({
   agora,
   eventos,
   sessoes,
-  atividades,
+  indice,
   ativo: emArraste,
   alvo,
   onAbrirEvento,
@@ -337,7 +342,7 @@ function ConteudoDia({
   agora: Date;
   eventos: Evento[];
   sessoes: Sessao[];
-  atividades: Map<string, Atividade>;
+  indice: IndiceAfazeres;
   ativo: DadosArraste | null;
   alvo: Alvo | null;
   onAbrirEvento: (e: EventoNaAgenda) => void;
@@ -345,7 +350,7 @@ function ConteudoDia({
 }) {
   // Eventos e sessões dividem as faixas juntos: um conflito aparece lado a lado, não sobreposto.
   const blocos = blocosDoDia<EventoNaAgenda | Sessao>(
-    [...expandirEventos(eventos, dia, inicioDoDiaApos(dia, 1)), ...sessoes.filter((s) => ativo(s) && atividades.get(s.atividadeId))],
+    [...expandirEventos(eventos, dia, inicioDoDiaApos(dia, 1)), ...sessoes.filter((s) => ativo(s) && afazerDaSessao(s, indice))],
     dia,
   );
   const idArrastado = emArraste && emArraste.tipo !== 'banco' ? emArraste.sessao.id : null;
@@ -358,7 +363,7 @@ function ConteudoDia({
           <BlocoSessaoArrastavel
             key={item.id}
             bloco={{ ...b, item }}
-            atividade={atividades.get(item.atividadeId)!}
+            afazer={afazerDaSessao(item, indice)!}
             conflitos={conflitosComFixos(item, eventos)}
             onAbrir={onAbrirSessao}
             movendo={idArrastado === item.id && emArraste?.tipo === 'sessao'}

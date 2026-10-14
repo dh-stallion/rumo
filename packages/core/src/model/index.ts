@@ -35,10 +35,67 @@ export interface Atividade extends Registro {
 export type OrigemSessao = 'planejada' | 'registrada';
 
 export interface Sessao extends Registro {
-  atividadeId: string;
+  /** Atividade praticada; null quando a sessão é de uma ação de projeto. */
+  atividadeId: string | null;
+  /** Ação de projeto agendada na grade; null quando a sessão é de uma atividade. */
+  acao: { projetoId: string; acaoId: string } | null;
   inicio: ISODateTime;
   fim: ISODateTime;
   origem: OrigemSessao;
+}
+
+export interface Marco {
+  id: string;
+  titulo: string;
+  data: ISODate | null;
+  concluido: boolean;
+}
+
+/** Próxima ação de um projeto; pode virar sessão na grade semanal. */
+export interface AcaoProjeto {
+  id: string;
+  titulo: string;
+  duracaoMin: number;
+  concluida: boolean;
+}
+
+/** Item com preço (ex.: componentes de um NAS). */
+export interface ItemProjeto {
+  id: string;
+  nome: string;
+  precoCentavos: number;
+  comprado: boolean;
+}
+
+/** Projeto de longo prazo. Marcos, ações e itens vivem dentro do registro (uso pessoal). */
+export interface Projeto extends Registro {
+  nome: string;
+  descricao: string;
+  cor: string;
+  arquivado: boolean;
+  marcos: Marco[];
+  acoes: AcaoProjeto[];
+  itens: ItemProjeto[];
+}
+
+export interface Aporte {
+  id: string;
+  data: ISODate;
+  /** Negativo para retirada. */
+  valorCentavos: number;
+  nota: string;
+}
+
+/** Meta financeira, sempre em reais (centavos inteiros). */
+export interface MetaFinanceira extends Registro {
+  nome: string;
+  /** null = usar a soma dos itens do projeto ligado. */
+  valorAlvoCentavos: number | null;
+  prazo: ISODate;
+  /** Quanto já havia guardado ao criar a meta. */
+  saldoInicialCentavos: number;
+  aportes: Aporte[];
+  projetoId: string | null;
 }
 
 export interface Pessoa extends Registro {

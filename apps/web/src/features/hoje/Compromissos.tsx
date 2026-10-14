@@ -25,7 +25,7 @@ export function ListaCompromissos({
             >
               <span className="w-12 shrink-0 text-sm font-semibold tabular-nums text-neutral-500">{paraHoraLocal(c.inicio)}</span>
               {c.tipo === 'sessao' && (
-                <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: c.atividade.cor }} aria-hidden />
+                <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: c.afazer.cor }} aria-hidden />
               )}
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-medium">{c.titulo}</span>

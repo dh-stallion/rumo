@@ -1,5 +1,7 @@
 import {
   comoRegistrada,
+  vinculoDaSessao,
+  type Afazer,
   idAdiamento,
   inicioDoDia,
   inicioDoDiaApos,
@@ -26,6 +28,7 @@ export async function registrarSessao(atividade: Atividade, inicio?: Date): Prom
   const ini = inicio ?? new Date(Math.max(agora.getTime() - dur, inicioDoDia(agora).getTime()));
   return criar(db.sessoes, {
     atividadeId: atividade.id,
+    acao: null,
     inicio: ini.toISOString(),
     fim: new Date(ini.getTime() + dur).toISOString(),
     origem: 'registrada',
@@ -62,10 +65,10 @@ export async function pausar(alvoTipo: AlvoAdiamento, id: string, pausada = true
   return () => pausar(alvoTipo, id, !pausada);
 }
 
-/** Cria uma sessão planejada; devolve a sessão e a função que desfaz. */
-export async function planejarSessao(atividade: Atividade, intervalo: Intervalo) {
+/** Cria uma sessão planejada de uma atividade ou ação de projeto; devolve a sessão e o desfazer. */
+export async function planejarSessao(afazer: Afazer, intervalo: Intervalo) {
   const sessao = await criar(db.sessoes, {
-    atividadeId: atividade.id,
+    ...vinculoDaSessao(afazer),
     inicio: intervalo.inicio,
     fim: intervalo.fim,
     origem: 'planejada',

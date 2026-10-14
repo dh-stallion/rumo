@@ -5,9 +5,11 @@ import {
   type Adiamento,
   type Atividade,
   type Evento,
+  type MetaFinanceira,
   type ISODateTime,
   type Pessoa,
   type Preferencias,
+  type Projeto,
   type Sessao,
 } from './model';
 
@@ -22,6 +24,8 @@ export interface TabelasBackup {
   eventos: Evento[];
   adiamentos: Adiamento[];
   preferencias: Preferencias[];
+  projetos: Projeto[];
+  metas: MetaFinanceira[];
 }
 
 export interface Backup {
@@ -38,6 +42,8 @@ export const TABELAS_BACKUP = [
   'eventos',
   'adiamentos',
   'preferencias',
+  'projetos',
+  'metas',
 ] as const satisfies readonly (keyof TabelasBackup)[];
 
 // Os esquemas são anotados com o tipo do modelo: se um mudar sem o outro, o compilador acusa.
@@ -60,12 +66,39 @@ const atividade: z.ZodType<Atividade> = z.object({
   limiteDias: z.number().int().positive().nullable(),
 });
 
-const sessao: z.ZodType<Sessao> = z.object({
+const sessao: z.ZodType<Sessao> = z
+  .object({
+    ...registro,
+    atividadeId: z.string().min(1).nullable(),
+    // Posterior à versão 1 do formato: backups antigos recebem o padrão.
+    acao: z.object({ projetoId: z.string().min(1), acaoId: z.string().min(1) }).nullable().default(null),
+    inicio: instante,
+    fim: instante,
+    origem: z.enum(['planejada', 'registrada']),
+  })
+  .refine((s) => s.atividadeId !== null || s.acao !== null, { message: 'sessão sem atividade nem ação', path: ['atividadeId'] });
+
+const data = z.iso.date();
+
+const projeto: z.ZodType<Projeto> = z.object({
   ...registro,
-  atividadeId: z.string().min(1),
-  inicio: instante,
-  fim: instante,
-  origem: z.enum(['planejada', 'registrada']),
+  nome: z.string(),
+  descricao: z.string(),
+  cor: z.string(),
+  arquivado: z.boolean(),
+  marcos: z.array(z.object({ id: z.string().min(1), titulo: z.string(), data: data.nullable(), concluido: z.boolean() })),
+  acoes: z.array(z.object({ id: z.string().min(1), titulo: z.string(), duracaoMin: z.number().int().positive(), concluida: z.boolean() })),
+  itens: z.array(z.object({ id: z.string().min(1), nome: z.string(), precoCentavos: z.number().int().min(0), comprado: z.boolean() })),
+});
+
+const meta: z.ZodType<MetaFinanceira> = z.object({
+  ...registro,
+  nome: z.string(),
+  valorAlvoCentavos: z.number().int().min(0).nullable(),
+  prazo: data,
+  saldoInicialCentavos: z.number().int(),
+  aportes: z.array(z.object({ id: z.string().min(1), data, valorCentavos: z.number().int(), nota: z.string() })),
+  projetoId: z.string().nullable(),
 });
 
 const pessoa: z.ZodType<Pessoa> = z.object({
@@ -117,6 +150,9 @@ const esquemaBackup: z.ZodType<Backup> = z.object({
     eventos: z.array(evento),
     adiamentos: z.array(adiamento),
     preferencias: z.array(preferencias),
+    // Tabelas posteriores à versão 1 do formato.
+    projetos: z.array(projeto).default([]),
+    metas: z.array(meta).default([]),
   }),
 });
 
@@ -133,6 +169,8 @@ const NOMES: Record<string, string> = {
   eventos: 'evento',
   adiamentos: 'adiamento',
   preferencias: 'preferências',
+  projetos: 'projeto',
+  metas: 'meta',
 };
 
 function descreverCaminho(caminho: PropertyKey[]): string {
@@ -186,5 +224,7 @@ export function contarRegistros(tabelas: TabelasBackup) {
     sessoes: ativos(tabelas.sessoes),
     pessoas: ativos(tabelas.pessoas),
     eventos: ativos(tabelas.eventos),
+    projetos: ativos(tabelas.projetos),
+    metas: ativos(tabelas.metas),
   };
 }

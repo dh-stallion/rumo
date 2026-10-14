@@ -1,5 +1,7 @@
 import {
+  afazerDaSessao,
   ativo,
+  indiceAfazeres,
   combinarDataHora,
   conflitosComFixos,
   duracaoMin,
@@ -27,10 +29,15 @@ import { minutosDe, SeletorDiaHora } from './SeletorDiaHora';
 /** Folha de uma sessão (aberta pela grade ou por "Hoje"): ver, mudar dia/hora/duração, remover. */
 export function SessaoSheet({ sessaoId, onFechar }: { sessaoId: string | null; onFechar: () => void }) {
   const sessao = useLiveQuery(() => (sessaoId ? db.sessoes.get(sessaoId) : undefined), [sessaoId]);
-  const atividade = useLiveQuery(() => (sessao ? db.atividades.get(sessao.atividadeId) : undefined), [sessao?.atividadeId]);
-  const visivel = !!sessaoId && !!sessao && ativo(sessao) && !!atividade;
+  // O nome vem do afazer: a atividade ou a ação de projeto da sessão.
+  const afazer = useLiveQuery(async () => {
+    if (!sessao) return undefined;
+    const [atividades, projetos] = await Promise.all([db.atividades.toArray(), db.projetos.toArray()]);
+    return afazerDaSessao(sessao, indiceAfazeres(atividades, projetos));
+  }, [sessao]);
+  const visivel = !!sessaoId && !!sessao && ativo(sessao) && !!afazer;
   return (
-    <Sheet aberto={!!sessaoId} onFechar={onFechar} titulo={atividade?.nome ?? 'Sessão'}>
+    <Sheet aberto={!!sessaoId} onFechar={onFechar} titulo={afazer?.nome ?? 'Sessão'}>
       {visivel && <Conteudo key={`${sessao.id}:${sessao.atualizadoEm}`} sessao={sessao} onFechar={onFechar} />}
     </Sheet>
   );

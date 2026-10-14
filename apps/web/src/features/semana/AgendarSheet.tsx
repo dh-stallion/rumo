@@ -1,11 +1,11 @@
 import {
-  agendadasNaSemana,
+  agendadasDoAfazer,
   combinarDataHora,
   conflitosComFixos,
   formatar,
   paraDataLocal,
   posicionarNoDia,
-  type Atividade,
+  type Afazer,
 } from '@rumo/core';
 import { useState } from 'react';
 import { Botao } from '../../components/ui/Botao';
@@ -23,12 +23,12 @@ function horaSugerida(agora: Date, ehHoje: boolean) {
 
 /** Fluxo sem arrastar: tocar no item do banco e escolher dia e hora. */
 export function AgendarSheet({
-  atividade,
+  afazer,
   dias,
   agora,
   onFechar,
 }: {
-  atividade: Atividade;
+  afazer: Afazer;
   dias: Date[];
   agora: Date;
   onFechar: () => void;
@@ -40,18 +40,19 @@ export function AgendarSheet({
   const temHoje = dias.some((d) => paraDataLocal(d) === hoje);
   const [dia, setDia] = useState(temHoje ? hoje : paraDataLocal(dias[0]!));
   const [hora, setHora] = useState(() => horaSugerida(agora, temHoje));
-  const [duracao, setDuracao] = useState(atividade.duracaoPadraoMin);
+  const [duracao, setDuracao] = useState(afazer.duracaoMin);
 
   const intervalo = hora ? posicionarNoDia(combinarDataHora(dia, '12:00'), minutosDe(hora), duracao) : null;
   const conflitos = intervalo ? conflitosComFixos(intervalo, eventos) : [];
-  const agendadas = agendadasNaSemana(atividade.id, sessoes, dias[0]!);
+  const agendadas = agendadasDoAfazer(afazer, sessoes, dias[0]!);
+  const meta = afazer.tipo === 'atividade' ? afazer.atividade.metaSemanal : 0;
 
   async function agendar() {
     if (!intervalo) return;
-    const { desfazer } = await planejarSessao(atividade, intervalo);
+    const { desfazer } = await planejarSessao(afazer, intervalo);
     onFechar();
     toast({
-      texto: `${atividade.nome}: ${formatar(intervalo.inicio, "EEE, HH:mm")}${conflitos.length ? ' · conflito' : ''}`,
+      texto: `${afazer.nome}: ${formatar(intervalo.inicio, "EEE, HH:mm")}${conflitos.length ? ' · conflito' : ''}`,
       acao: { rotulo: 'Desfazer', fn: desfazer },
     });
   }
@@ -59,7 +60,7 @@ export function AgendarSheet({
   return (
     <div className="space-y-5">
       <p className="text-sm text-neutral-500">
-        {atividade.metaSemanal > 0 ? `${agendadas} de ${atividade.metaSemanal} agendados nesta semana` : `${agendadas} agendados nesta semana`}
+        {meta > 0 ? `${agendadas} de ${meta} agendados nesta semana` : `${agendadas} agendados nesta semana`}
       </p>
       <SeletorDiaHora
         dias={dias}

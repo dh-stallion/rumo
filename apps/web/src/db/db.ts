@@ -3,8 +3,10 @@ import {
   type Adiamento,
   type Atividade,
   type Evento,
+  type MetaFinanceira,
   type Pessoa,
   type Preferencias,
+  type Projeto,
   type Sessao,
 } from '@rumo/core';
 import Dexie, { type Table } from 'dexie';
@@ -16,6 +18,8 @@ export class RumoDB extends Dexie {
   eventos!: Table<Evento, string>;
   adiamentos!: Table<Adiamento, string>;
   preferencias!: Table<Preferencias, string>;
+  projetos!: Table<Projeto, string>;
+  metas!: Table<MetaFinanceira, string>;
 
   constructor(nome = 'rumo') {
     super(nome);
@@ -51,6 +55,17 @@ export class RumoDB extends Dexie {
             e.exdatas ??= [];
             e.serieId ??= null;
             e.ocorrenciaOriginal ??= null;
+          }),
+      );
+    // v5: projetos e metas financeiras; sessão pode ser de uma ação de projeto.
+    this.version(5)
+      .stores({ projetos: 'id, atualizadoEm', metas: 'id, projetoId, atualizadoEm' })
+      .upgrade((tx) =>
+        tx
+          .table<Sessao>('sessoes')
+          .toCollection()
+          .modify((s) => {
+            s.acao ??= null;
           }),
       );
   }

@@ -18,3 +18,6 @@ export * from './calendario/mes';
 export * from './calendario/ics';
 export * from './calendario/caldav';
 export * from './calendario/importacao';
+export * from './financas/dinheiro';
+export * from './financas/metas';
+export * from './rules/afazeres';

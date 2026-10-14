@@ -23,6 +23,7 @@ export const sessao = (inicio: Date, p: Partial<Sessao> = {}): Sessao => ({
   ...base,
   id: `s${++seq}`,
   atividadeId: 'a1',
+  acao: null,
   inicio: inicio.toISOString(),
   fim: new Date(inicio.getTime() + 30 * 60_000).toISOString(),
   origem: 'registrada',

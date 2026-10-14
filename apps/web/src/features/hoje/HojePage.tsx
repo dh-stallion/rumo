@@ -39,6 +39,7 @@ export function HojePage() {
   const pessoas = useLista(db.pessoas);
   const adiamentos = useLista(db.adiamentos);
   const eventos = useLista(db.eventos);
+  const projetos = useLista(db.projetos);
   const [adiando, setAdiando] = useState<Alvo | null>(null);
   const [editandoEvento, setEditandoEvento] = useState<EventoNaAgenda | 'novo' | null>(null);
   const [sessaoAberta, setSessaoAberta] = useState<string | null>(null);
@@ -63,8 +64,8 @@ export function HojePage() {
   }
 
   const itens = itensDeAtencao({ atividades, sessoes, pessoas, adiamentos }, agora, cal);
-  const deHoje = compromissosDeHoje({ eventos, sessoes, atividades }, agora);
-  const proximos = proximosCompromissos({ eventos, sessoes, atividades }, agora);
+  const deHoje = compromissosDeHoje({ eventos, sessoes, atividades, projetos: projetos ?? [] }, agora);
+  const proximos = proximosCompromissos({ eventos, sessoes, atividades, projetos: projetos ?? [] }, agora);
   const abrir = (c: Compromisso) => {
     if (c.tipo === 'evento') setEditandoEvento(c.evento);
     else setSessaoAberta(c.sessao.id);

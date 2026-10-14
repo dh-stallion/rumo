@@ -13,12 +13,15 @@ async function popular(db: RumoDB) {
     { ...base('a2'), nome: 'Inglês', categoria: 'estudo', duracaoPadraoMin: 45, metaSemanal: 0, cor: '#0ea5e9', pausada: true, limiteDias: 10, excluidoEm: t('2026-10-05T12:00Z') },
   ]);
   await db.sessoes.bulkAdd([
-    { ...base('s1'), atividadeId: 'a1', inicio: t('2026-10-12T13:00Z'), fim: t('2026-10-12T13:30Z'), origem: 'registrada' },
-    { ...base('s2'), atividadeId: 'a1', inicio: t('2026-10-16T22:00Z'), fim: t('2026-10-16T22:30Z'), origem: 'planejada' },
+    { ...base('s1'), atividadeId: 'a1', acao: null, inicio: t('2026-10-12T13:00Z'), fim: t('2026-10-12T13:30Z'), origem: 'registrada' },
+    { ...base('s2'), atividadeId: 'a1', acao: null, inicio: t('2026-10-16T22:00Z'), fim: t('2026-10-16T22:30Z'), origem: 'planejada' },
   ]);
   await db.pessoas.add({ ...base('p1'), nome: 'Ana', frequenciaDias: 7, ultimoContato: t('2026-10-01T20:00Z'), notas: 'aniversário 3/11 — "café"', pausada: false });
   await db.eventos.add({ ...base('e1'), titulo: 'Dentista', inicio: t('2026-10-14T18:00Z'), fim: t('2026-10-14T19:00Z'), fixo: true, pessoaId: 'p1', rrule: 'FREQ=WEEKLY;BYDAY=TU', exdatas: [t('2026-10-20T21:00Z')], serieId: null, ocorrenciaOriginal: null });
   await db.adiamentos.add({ ...base('atividade:a1'), alvoTipo: 'atividade', alvoId: 'a1', ate: t('2026-10-14T03:00Z') });
+  await db.projetos.add({ ...base('nas'), nome: 'NAS', descricao: '', cor: '#0ea5e9', arquivado: false, marcos: [], acoes: [{ id: 'ac1', titulo: 'Pesquisar HDs', duracaoMin: 60, concluida: false }], itens: [{ id: 'i1', nome: 'HD', precoCentavos: 110_000, comprado: false }] });
+  await db.metas.add({ ...base('meta1'), nome: 'NAS', valorAlvoCentavos: null, prazo: '2027-03-31', saldoInicialCentavos: 0, aportes: [{ id: 'ap1', data: '2026-10-05', valorCentavos: 20_000, nota: '' }], projetoId: 'nas' });
+  await db.sessoes.add({ ...base('s3'), atividadeId: null, acao: { projetoId: 'nas', acaoId: 'ac1' }, inicio: t('2026-10-15T13:00Z'), fim: t('2026-10-15T14:00Z'), origem: 'planejada' });
   await db.preferencias.add({ ...base(ID_PREFERENCIAS), inicioSemana: 0, convitePlanejar: false, semanaConviteTratada: '2026-10-12' });
 }
 

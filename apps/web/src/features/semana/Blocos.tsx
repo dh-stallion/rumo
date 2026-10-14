@@ -1,4 +1,4 @@
-import { paraHoraLocal, type Atividade, type Evento, type EventoNaAgenda, type Sessao } from '@rumo/core';
+import { paraHoraLocal, type Afazer, type Evento, type EventoNaAgenda, type Sessao } from '@rumo/core';
 import { AlertTriangle, Check, Lock, Repeat } from 'lucide-react';
 import type { CSSProperties, HTMLAttributes, ReactNode, Ref } from 'react';
 import { ALTURA_MINIMA_BLOCO, minParaPx, type BlocoNoDia } from './geometria';
@@ -44,7 +44,7 @@ export function BlocoEvento({ bloco, onAbrir }: { bloco: BlocoNoDia<EventoNaAgen
 
 export interface PropsBlocoSessao {
   bloco: BlocoNoDia<Sessao>;
-  atividade: Atividade;
+  afazer: Afazer;
   conflitos: Evento[];
   onAbrir?: (s: Sessao) => void;
   /** Estilo extra (ex.: altura ao redimensionar). */
@@ -55,13 +55,13 @@ export interface PropsBlocoSessao {
   children?: ReactNode;
 }
 
-export function BlocoSessao({ bloco, atividade, conflitos, onAbrir, estilo, fantasma, refArraste, propsArraste, children }: PropsBlocoSessao) {
+export function BlocoSessao({ bloco, afazer, conflitos, onAbrir, estilo, fantasma, refArraste, propsArraste, children }: PropsBlocoSessao) {
   const s = bloco.item;
   const feita = s.origem === 'registrada';
   const alto = minParaPx(bloco.fimMin - bloco.inicioMin) >= 40;
   const conflito = conflitos.length > 0;
   const rotulo = [
-    atividade.nome,
+    afazer.nome,
     faixaHorario(s),
     feita ? 'feito' : 'planejado',
     conflito && `em conflito com ${conflitos.map((c) => c.titulo).join(', ')}`,
@@ -76,7 +76,7 @@ export function BlocoSessao({ bloco, atividade, conflitos, onAbrir, estilo, fant
         data-bloco="sessao"
         onClick={() => onAbrir?.(s)}
         aria-label={rotulo}
-        style={{ backgroundColor: `${atividade.cor}${feita ? '26' : '40'}`, borderLeftColor: atividade.cor }}
+        style={{ backgroundColor: `${afazer.cor}${feita ? '26' : '40'}`, borderLeftColor: afazer.cor }}
         className={`arrastavel h-full w-full overflow-hidden rounded-md border-l-[3px] px-1.5 py-0.5 text-left text-xs leading-tight text-neutral-900 dark:text-white ${
           conflito ? 'ring-2 ring-red-500' : ''
         } ${feita ? 'opacity-80' : ''}`}
@@ -85,7 +85,7 @@ export function BlocoSessao({ bloco, atividade, conflitos, onAbrir, estilo, fant
         <span className="flex items-start gap-1">
           {feita && <Check size={11} className="mt-px shrink-0" aria-hidden />}
           {conflito && <AlertTriangle size={11} className="mt-px shrink-0 text-red-600 dark:text-red-400" aria-hidden />}
-          <span className="truncate font-semibold">{atividade.nome}</span>
+          <span className="truncate font-semibold">{afazer.nome}</span>
         </span>
         {alto && <span className="block truncate opacity-75">{faixaHorario(s)}</span>}
       </button>

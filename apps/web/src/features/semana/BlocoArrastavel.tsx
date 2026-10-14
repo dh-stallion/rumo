@@ -1,5 +1,5 @@
 import { useDraggable } from '@dnd-kit/core';
-import { diaCurto, duracaoMin, paraHoraLocal, type Atividade, type Evento, type Intervalo, type Sessao } from '@rumo/core';
+import { diaCurto, duracaoMin, paraHoraLocal, type Afazer, type Evento, type Intervalo, type Sessao } from '@rumo/core';
 import { AlertTriangle } from 'lucide-react';
 import type { DadosArraste } from './arraste';
 import { BlocoSessao } from './Blocos';
@@ -8,14 +8,14 @@ import { ALTURA_MINIMA_BLOCO, minParaPx, type BlocoNoDia } from './geometria';
 /** Bloco de sessão que se move com toque longo; planejadas têm alça para mudar a duração. */
 export function BlocoSessaoArrastavel({
   bloco,
-  atividade,
+  afazer,
   conflitos,
   onAbrir,
   movendo,
   redimensionando,
 }: {
   bloco: BlocoNoDia<Sessao>;
-  atividade: Atividade;
+  afazer: Afazer;
   conflitos: Evento[];
   onAbrir: (s: Sessao) => void;
   /** Esta sessão está sendo movida (o original fica esmaecido). */
@@ -25,7 +25,7 @@ export function BlocoSessaoArrastavel({
 }) {
   const s = bloco.item;
   const planejada = s.origem === 'planejada';
-  const mover: DadosArraste = { tipo: 'sessao', atividade, sessao: s };
+  const mover: DadosArraste = { tipo: 'sessao', afazer, sessao: s };
   const { setNodeRef, listeners, attributes } = useDraggable({ id: `sessao:${s.id}`, data: mover, disabled: !planejada });
   const alturaPrevia = redimensionando
     ? Math.max(minParaPx(duracaoMin(redimensionando)), ALTURA_MINIMA_BLOCO)
@@ -34,7 +34,7 @@ export function BlocoSessaoArrastavel({
   return (
     <BlocoSessao
       bloco={bloco}
-      atividade={atividade}
+      afazer={afazer}
       conflitos={conflitos}
       onAbrir={onAbrir}
       fantasma={movendo}
@@ -47,13 +47,13 @@ export function BlocoSessaoArrastavel({
           até {paraHoraLocal(redimensionando.fim)}
         </span>
       )}
-      {planejada && minParaPx(bloco.fimMin - bloco.inicioMin) >= 28 && <AlcaRedimensionar sessao={s} atividade={atividade} />}
+      {planejada && minParaPx(bloco.fimMin - bloco.inicioMin) >= 28 && <AlcaRedimensionar sessao={s} afazer={afazer} />}
     </BlocoSessao>
   );
 }
 
-function AlcaRedimensionar({ sessao, atividade }: { sessao: Sessao; atividade: Atividade }) {
-  const dados: DadosArraste = { tipo: 'redim', atividade, sessao };
+function AlcaRedimensionar({ sessao, afazer }: { sessao: Sessao; afazer: Afazer }) {
+  const dados: DadosArraste = { tipo: 'redim', afazer, sessao };
   const { setNodeRef, listeners, attributes } = useDraggable({ id: `redim:${sessao.id}`, data: dados });
   return (
     <button
@@ -63,7 +63,7 @@ function AlcaRedimensionar({ sessao, atividade }: { sessao: Sessao; atividade: A
       {...attributes}
       {...listeners}
       aria-roledescription="alça de redimensionar"
-      aria-label={`Mudar duração de ${atividade.nome}`}
+      aria-label={`Mudar duração de ${afazer.nome}`}
       onContextMenu={(e) => e.preventDefault()}
       className="arrastavel absolute -bottom-3 left-1/2 z-[3] flex h-6 w-11 -translate-x-1/2 items-center justify-center"
     >
@@ -74,12 +74,12 @@ function AlcaRedimensionar({ sessao, atividade }: { sessao: Sessao; atividade: A
 
 /** Prévia que segue o dedo durante o arraste, com o horário de destino. */
 export function PreviaArraste({
-  atividade,
+  afazer,
   duracao,
   alvo,
   largura,
 }: {
-  atividade: Atividade;
+  afazer: Afazer;
   duracao: number;
   alvo: { intervalo: Intervalo; conflitos: Evento[] } | null;
   largura: number;
@@ -90,8 +90,8 @@ export function PreviaArraste({
       style={{
         width: largura,
         height: Math.max(minParaPx(duracao), ALTURA_MINIMA_BLOCO),
-        backgroundColor: `${atividade.cor}cc`,
-        borderLeftColor: atividade.cor,
+        backgroundColor: `${afazer.cor}cc`,
+        borderLeftColor: afazer.cor,
       }}
       className={`arrastavel overflow-hidden rounded-md border-l-[3px] px-1.5 py-0.5 text-xs leading-tight text-white shadow-xl ${
         conflito ? 'ring-2 ring-red-500' : 'ring-1 ring-black/10'
@@ -100,7 +100,7 @@ export function PreviaArraste({
     >
       <span className="flex items-center gap-1 font-semibold">
         {conflito && <AlertTriangle size={11} aria-hidden />}
-        <span className="truncate">{atividade.nome}</span>
+        <span className="truncate">{afazer.nome}</span>
       </span>
       <span className="block truncate tabular-nums" data-previa-horario>
         {alvo ? `${diaCurto(alvo.intervalo.inicio)} ${paraHoraLocal(alvo.intervalo.inicio)}` : 'solte na grade'}

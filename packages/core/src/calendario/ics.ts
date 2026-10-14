@@ -1,6 +1,7 @@
 import { TZDate, tz } from '@date-fns/tz';
 import { format } from 'date-fns';
-import { ativo, type Atividade, type Evento, type ISODateTime, type Pessoa, type Sessao } from '../model';
+import { ativo, type Atividade, type Evento, type ISODateTime, type Pessoa, type Projeto, type Sessao } from '../model';
+import { afazerDaSessao, indiceAfazeres } from '../rules/afazeres';
 import { FUSO_PADRAO } from '../time';
 import { lerRRule } from './recorrencia';
 
@@ -17,6 +18,7 @@ export interface DadosICS {
   /** Sessões planejadas entram como eventos da categoria "Atividade". */
   sessoes?: readonly Sessao[];
   atividades?: readonly Atividade[];
+  projetos?: readonly Projeto[];
   pessoas?: readonly Pessoa[];
 }
 
@@ -96,7 +98,7 @@ function vevento(e: Evento, fuso: string, agora: Date, pessoas: readonly Pessoa[
   return linhas;
 }
 
-function vsessao(s: Sessao, a: Atividade, fuso: string, agora: Date): string[] {
+function vsessao(s: Sessao, nome: string, fuso: string, agora: Date): string[] {
   return [
     'BEGIN:VEVENT',
     `UID:${uidDe(`sessao-${s.id}`)}`,
@@ -104,7 +106,7 @@ function vsessao(s: Sessao, a: Atividade, fuso: string, agora: Date): string[] {
     `LAST-MODIFIED:${utc(s.atualizadoEm)}`,
     comFuso('DTSTART', s.inicio, fuso),
     comFuso('DTEND', s.fim, fuso),
-    `SUMMARY:${escaparTexto(a.nome)}`,
+    `SUMMARY:${escaparTexto(nome)}`,
     'TRANSP:OPAQUE',
     'CATEGORIES:Atividade',
     'END:VEVENT',
@@ -120,7 +122,7 @@ export function eventosExportaveis(eventos: readonly Evento[]): Evento[] {
 export function gerarICS(dados: DadosICS, opcoes: OpcoesICS = {}): string {
   const fuso = opcoes.fuso ?? FUSO_PADRAO;
   const agora = opcoes.agora ?? new Date();
-  const atividades = new Map((dados.atividades ?? []).filter(ativo).map((a) => [a.id, a]));
+  const indice = indiceAfazeres(dados.atividades ?? [], dados.projetos ?? []);
   const linhas = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -134,8 +136,8 @@ export function gerarICS(dados: DadosICS, opcoes: OpcoesICS = {}): string {
   ];
   for (const e of eventosExportaveis(dados.eventos)) linhas.push(...vevento(e, fuso, agora, dados.pessoas ?? []));
   for (const s of dados.sessoes ?? []) {
-    const a = atividades.get(s.atividadeId);
-    if (ativo(s) && s.origem === 'planejada' && a) linhas.push(...vsessao(s, a, fuso, agora));
+    const f = afazerDaSessao(s, indice);
+    if (ativo(s) && s.origem === 'planejada' && f) linhas.push(...vsessao(s, f.nome, fuso, agora));
   }
   linhas.push('END:VCALENDAR');
   return linhas.map(dobrar).join(CRLF) + CRLF;

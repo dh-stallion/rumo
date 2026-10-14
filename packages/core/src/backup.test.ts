@@ -35,6 +35,35 @@ const tabelas = (): TabelasBackup => ({
       semanaConviteTratada: '2026-10-12',
     },
   ],
+  projetos: [
+    {
+      id: 'nas',
+      criadoEm: '2026-10-01T15:00:00.000Z',
+      atualizadoEm: '2026-10-01T15:00:00.000Z',
+      excluidoEm: null,
+      nome: 'NAS',
+      descricao: 'Servidor em casa; "backup" das fotos',
+      cor: '#0ea5e9',
+      arquivado: false,
+      marcos: [{ id: 'm1', titulo: 'Comprar peças', data: '2026-11-30', concluido: false }],
+      acoes: [{ id: 'ac1', titulo: 'Pesquisar HDs', duracaoMin: 60, concluida: false }],
+      itens: [{ id: 'i1', nome: 'HD 8 TB', precoCentavos: 110_000, comprado: false }],
+    },
+  ],
+  metas: [
+    {
+      id: 'meta1',
+      criadoEm: '2026-10-01T15:00:00.000Z',
+      atualizadoEm: '2026-10-01T15:00:00.000Z',
+      excluidoEm: null,
+      nome: 'NAS',
+      valorAlvoCentavos: null,
+      prazo: '2027-03-31',
+      saldoInicialCentavos: 50_000,
+      aportes: [{ id: 'ap1', data: '2026-10-05', valorCentavos: 20_000, nota: '' }],
+      projetoId: 'nas',
+    },
+  ],
 });
 
 /** Simula salvar em arquivo e ler de volta. */
@@ -98,6 +127,25 @@ describe('validarBackup', () => {
     expect(r.ok && r.backup.tabelas.preferencias[0]).toMatchObject({ convitePlanejar: true, semanaConviteTratada: null });
   });
 
+  it('backup de antes dos projetos e metas: tabelas vazias e sessões sem ação', () => {
+    const antigo = viaArquivo(criarBackup(tabelas())) as { tabelas: Record<string, unknown> & { sessoes: Record<string, unknown>[] } };
+    delete antigo.tabelas.projetos;
+    delete antigo.tabelas.metas;
+    delete antigo.tabelas.sessoes[0]!.acao;
+    const r = validarBackup(antigo);
+    expect(r.ok && r.backup.tabelas.projetos).toEqual([]);
+    expect(r.ok && r.backup.tabelas.sessoes[0]!.acao).toBeNull();
+  });
+
+  it('sessão de ação de projeto é válida; sem atividade nem ação, não', () => {
+    const t = tabelas();
+    t.sessoes.push({ ...t.sessoes[0]!, id: 's-acao', atividadeId: null, acao: { projetoId: 'nas', acaoId: 'ac1' } });
+    expect(validarBackup(viaArquivo(criarBackup(t))).ok).toBe(true);
+    t.sessoes.push({ ...t.sessoes[0]!, id: 's-solta', atividadeId: null, acao: null });
+    const r = validarBackup(viaArquivo(criarBackup(t)));
+    expect(!r.ok && r.erros).toEqual(['sessão nº 3, campo "atividadeId": valor inválido']);
+  });
+
   it('recusa ids repetidos', () => {
     const t = tabelas();
     t.atividades[1] = { ...t.atividades[1]!, id: 'a1' };
@@ -108,6 +156,6 @@ describe('validarBackup', () => {
 
 describe('contarRegistros', () => {
   it('conta só registros não excluídos', () => {
-    expect(contarRegistros(tabelas())).toEqual({ atividades: 1, sessoes: 1, pessoas: 1, eventos: 1 });
+    expect(contarRegistros(tabelas())).toEqual({ atividades: 1, sessoes: 1, pessoas: 1, eventos: 1, projetos: 1, metas: 1 });
   });
 });

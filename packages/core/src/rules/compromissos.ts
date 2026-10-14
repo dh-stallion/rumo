@@ -1,11 +1,12 @@
 import { chaveEvento, expandirEventos, type EventoNaAgenda } from '../calendario/eventos';
-import { ativo, type Atividade, type Evento, type ISODate, type Sessao } from '../model';
+import { ativo, type Atividade, type Evento, type ISODate, type Projeto, type Sessao } from '../model';
+import { afazerDaSessao, indiceAfazeres, type Afazer } from './afazeres';
 import { combinarDataHora, formatar, FUSO_PADRAO, inicioDoDia, inicioDoDiaApos, paraDataLocal } from '../time';
 
 /** Algo marcado na agenda: um evento ou uma sessão planejada de uma atividade. */
 export type Compromisso =
   | { tipo: 'evento'; id: string; inicio: string; fim: string; titulo: string; pessoaId: string | null; fixo: boolean; evento: EventoNaAgenda }
-  | { tipo: 'sessao'; id: string; inicio: string; fim: string; titulo: string; pessoaId: null; fixo: false; sessao: Sessao; atividade: Atividade };
+  | { tipo: 'sessao'; id: string; inicio: string; fim: string; titulo: string; pessoaId: null; fixo: false; sessao: Sessao; afazer: Afazer };
 
 export interface DiaDeCompromissos {
   data: ISODate;
@@ -16,6 +17,7 @@ export interface DadosCompromissos {
   eventos: readonly Evento[];
   sessoes: readonly Sessao[];
   atividades: readonly Atividade[];
+  projetos?: readonly Projeto[];
 }
 
 const ordem = (a: Compromisso, b: Compromisso) =>
@@ -37,16 +39,16 @@ export function compromissosEntre(dados: DadosCompromissos, inicio: Date, fim: D
   const ini = inicio.toISOString();
   const ate = fim.toISOString();
   const dentro = (i: string) => i >= ini && i < ate;
-  const atividades = new Map(dados.atividades.filter(ativo).map((a) => [a.id, a]));
+  const indice = indiceAfazeres(dados.atividades, dados.projetos);
 
   const itens: Compromisso[] = [];
   for (const e of expandirEventos(dados.eventos, inicio, fim)) {
     if (dentro(e.inicio)) itens.push(compromissoDeEvento(e));
   }
   for (const s of dados.sessoes) {
-    const atividade = atividades.get(s.atividadeId);
-    if (!ativo(s) || s.origem !== 'planejada' || !atividade || !dentro(s.inicio)) continue;
-    itens.push({ tipo: 'sessao', id: s.id, inicio: s.inicio, fim: s.fim, titulo: atividade.nome, pessoaId: null, fixo: false, sessao: s, atividade });
+    const afazer = afazerDaSessao(s, indice);
+    if (!ativo(s) || s.origem !== 'planejada' || !afazer || !dentro(s.inicio)) continue;
+    itens.push({ tipo: 'sessao', id: s.id, inicio: s.inicio, fim: s.fim, titulo: afazer.nome, pessoaId: null, fixo: false, sessao: s, afazer });
   }
   return itens.sort(ordem);
 }

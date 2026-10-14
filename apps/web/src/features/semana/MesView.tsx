@@ -1,4 +1,5 @@
 import {
+  afazerDaSessao,
   ativo,
   combinarDataHora,
   compromissosDeHoje,
@@ -9,7 +10,7 @@ import {
   inicioDoDiaApos,
   paraDataLocal,
   rotuloDia,
-  type Atividade,
+  type IndiceAfazeres,
   type Calendario,
   type Compromisso,
   type Evento,
@@ -39,7 +40,7 @@ export function MesView({
   cal,
   eventos,
   sessoes,
-  atividades,
+  indice,
   pessoas,
   onSelecionar,
   onAbrir,
@@ -51,7 +52,7 @@ export function MesView({
   cal: Calendario;
   eventos: Evento[];
   sessoes: Sessao[];
-  atividades: Map<string, Atividade>;
+  indice: IndiceAfazeres;
   pessoas: Pessoa[];
   onSelecionar: (d: ISODate) => void;
   onAbrir: (c: Compromisso) => void;
@@ -75,12 +76,15 @@ export function MesView({
     }
   }
   for (const s of sessoes) {
-    const a = atividades.get(s.atividadeId);
+    const a = afazerDaSessao(s, indice);
     if (!ativo(s) || !a || s.inicio < ini.toISOString() || s.inicio >= fim.toISOString()) continue;
     marcar(paraDataLocal(s.inicio), { cor: a.cor, feito: s.origem === 'registrada' });
   }
 
-  const doDia = compromissosDeHoje({ eventos, sessoes, atividades: [...atividades.values()] }, combinarDataHora(selecionado, '12:00'));
+  const doDia = compromissosDeHoje(
+    { eventos, sessoes, atividades: [...indice.atividades.values()], projetos: [...indice.projetos.values()] },
+    combinarDataHora(selecionado, '12:00'),
+  );
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-4">

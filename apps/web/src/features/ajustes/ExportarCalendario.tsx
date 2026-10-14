@@ -17,15 +17,16 @@ export function ExportarCalendario() {
 
   // Arquivo pronto antes do toque: o compartilhamento no iPhone precisa acontecer direto no gesto.
   const pronto = useLiveQuery(async () => {
-    const [eventos, sessoes, atividades, pessoas] = await Promise.all([
+    const [eventos, sessoes, atividades, pessoas, projetos] = await Promise.all([
       db.eventos.toArray(),
       db.sessoes.toArray(),
       db.atividades.toArray(),
       db.pessoas.toArray(),
+      db.projetos.toArray(),
     ]);
     const planejadas = comSessoes ? sessoes.filter((s) => !s.excluidoEm && s.origem === 'planejada') : [];
     return {
-      ics: gerarICS({ eventos, sessoes: planejadas, atividades, pessoas }),
+      ics: gerarICS({ eventos, sessoes: planejadas, atividades, pessoas, projetos }),
       total: eventosExportaveis(eventos).length + planejadas.length,
     };
   }, [comSessoes]);
