@@ -4,6 +4,7 @@ import { Interruptor, Segmentado } from '../../components/ui/Campos';
 import { Pagina, Secao } from '../../components/ui/Pagina';
 import { atualizarPreferencias, definirInicioSemana, useCalendario, usePreferencias } from '../../db/preferencias';
 import { DadosSecao } from './DadosSecao';
+import { ExportarCalendario } from './ExportarCalendario';
 
 const opcoesInicioSemana = [
   { valor: '0', rotulo: 'Domingo' },
@@ -46,6 +47,8 @@ export function AjustesPage() {
           />
         </div>
       </Secao>
+
+      <ExportarCalendario />
 
       <DadosSecao />
     </Pagina>

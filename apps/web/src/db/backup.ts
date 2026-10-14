@@ -1,4 +1,5 @@
 import { criarBackup, paraDataLocal, type Backup, type TabelasBackup } from '@rumo/core';
+import { entregarArquivo } from '../app/arquivo';
 import { db as dbPadrao, type RumoDB } from './db';
 
 /** Tudo o que está no aparelho, inclusive registros excluídos (tombstones). */
@@ -32,28 +33,6 @@ export async function importarBackup(backup: Backup, db: RumoDB = dbPadrao): Pro
 
 export const nomeArquivoBackup = (agora = new Date()) => `rumo-backup-${paraDataLocal(agora)}.json`;
 
-/**
- * Entrega o arquivo ao usuário. No celular usa a folha de compartilhamento (no iPhone:
- * "Salvar em Arquivos"); no computador, ou se o compartilhamento falhar, baixa o arquivo.
- * Precisa ser chamado direto do toque, por isso recebe o backup já pronto.
- */
-export async function entregarBackup(backup: Backup): Promise<'compartilhado' | 'baixado' | 'cancelado'> {
-  const nome = nomeArquivoBackup(new Date(backup.exportadoEm));
-  const arquivo = new File([JSON.stringify(backup, null, 2)], nome, { type: 'application/json' });
-  const toque = matchMedia('(pointer: coarse)').matches;
-  if (toque && navigator.canShare?.({ files: [arquivo] })) {
-    try {
-      await navigator.share({ files: [arquivo], title: nome });
-      return 'compartilhado';
-    } catch (e) {
-      if (e instanceof DOMException && e.name === 'AbortError') return 'cancelado';
-    }
-  }
-  const url = URL.createObjectURL(arquivo);
-  const a = Object.assign(document.createElement('a'), { href: url, download: nome });
-  document.body.append(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 10_000);
-  return 'baixado';
-}
+/** Entrega o backup (compartilhar no celular, baixar no computador). */
+export const entregarBackup = (backup: Backup) =>
+  entregarArquivo(JSON.stringify(backup, null, 2), nomeArquivoBackup(new Date(backup.exportadoEm)), 'application/json');

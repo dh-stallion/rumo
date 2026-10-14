@@ -51,8 +51,47 @@ Observações:
 - Os dados do app instalado ficam separados dos dados do Safari. Use sempre o ícone.
 - Apps instalados na tela inicial não têm os dados apagados automaticamente pelo iOS. Mesmo assim,
   faça backups: veja abaixo.
+- Atualizações: o app se atualiza sozinho na próxima vez que for aberto com internet.
 
-## Planejador semanal (aba Semana)
+## Calendário (semana e mês)
+
+A aba **Calendário** alterna entre **Semana** (a grade do planejador, abaixo) e **Mês**: semanas
+completas com uma marca por compromisso em cada dia (eventos em cinza, sessões na cor da atividade).
+Tocar num dia lista o que há nele; **Ver na semana** abre a semana daquele dia.
+
+**Eventos recorrentes**: no formulário, **Repetir** oferece todo dia, dias úteis, toda semana (escolhendo
+os dias), a cada 2 semanas, todo mês (no dia N ou na Nª segunda/terça…), todo ano. **Termina** nunca,
+numa data ou após N vezes. Ao editar ou remover uma ocorrência, o app pergunta:
+
+- **Só este evento**: vira uma exceção da série (RECURRENCE-ID) ou é pulado (EXDATE);
+- **Este e os seguintes**: a série antiga termina antes dessa data e nasce uma nova (o COUNT é dividido);
+- **Todos os eventos**: muda a série inteira (exceções acompanham se a regra não mudou).
+
+Se a própria repetição mudar, "só este" não aparece. Tudo pode ser desfeito.
+
+As regras ficam guardadas como RRULE (RFC 5545) e são expandidas por um código próprio
+(`packages/core/src/calendario/recorrencia.ts`), no fuso de São Paulo. Ele suporta FREQ
+DAILY/WEEKLY/MONTHLY/YEARLY, INTERVAL, COUNT, UNTIL, BYDAY (com ordinal no mensal), BYMONTHDAY e WKST.
+Regras de fora com outras partes (ex.: BYSETPOS) aparecem só na primeira data, com aviso na leitura.
+
+### Levar para o Calendário do iPhone
+
+Em **Ajustes → Calendário do iPhone → Exportar calendário (.ics)**: escolha **Salvar em Arquivos**,
+abra o arquivo no app **Arquivos** e toque em **Adicionar todos**. É uma cópia: o que mudar depois no
+Rumo não aparece lá. Sessões planejadas podem ir junto (categoria "Atividade").
+
+A **assinatura** que se atualiza sozinha (feed `webcal://…/feed/<token>.ics`) depende do servidor da
+etapa 5. O gerador já está pronto em `core` (`gerarICS(…, { feed: true })`).
+
+### Pronto para CalDAV
+
+`packages/core/src/calendario/caldav.ts` define a interface `ProvedorCalendario` (listar, baixar, salvar
+com If-Match, remover) e `recursosCalDAV`, que gera um recurso `.ics` por UID (a série com suas exceções,
+como o CalDAV exige). `lerICS`/`eventosDoICS` convertem de volta, inclusive de outros calendários
+(UTC, DURATION, dia inteiro, alarmes). Falta o provedor HTTP (Radicale/Nextcloud) e a sincronização,
+que entram com o backend.
+
+## Planejador semanal (Calendário → Semana)
 
 - **Grade**: no celular mostra 3 dias por vez; deslize para os lados (encaixa por dia). Em telas largas,
   os 7 dias. Abre em hoje, às 7h. ‹ › trocam de semana, respeitando o início de semana dos Ajustes.
@@ -94,7 +133,6 @@ O formato tem versão (`"versao": 1`), e a validação fica em `packages/core/sr
 
 Em **Ajustes → Armazenamento**, o app pede ao navegador armazenamento persistente
 (`navigator.storage.persist()`) e mostra o resultado.
-- Atualizações: o app se atualiza sozinho na próxima vez que for aberto com internet.
 
 ## Regras da tela "Hoje"
 
@@ -121,13 +159,13 @@ Cada card tem **feito**, **adiar** (amanhã, em 3 dias, semana que vem) e **paus
   As contas de dia e semana usam `@date-fns/tz`.
 - **Pronto para sincronizar**: todo registro tem `id` (UUID), `criadoEm`, `atualizadoEm` e `excluidoEm`
   (exclusão lógica), base para o last-write-wins da etapa 5.
-- **Recorrência**: strings RRULE (RFC 5545), exportáveis em `.ics` e compatíveis com CalDAV.
+- **Recorrência**: strings RRULE (RFC 5545) com expansor próprio; exceções por EXDATE e RECURRENCE-ID.
 - **Dinheiro** (etapa 4): centavos inteiros.
 
 ## Etapas
 
 - [x] 1. Núcleo: atividades, pessoas, "fiz hoje" / "falei com", tela Hoje
 - [x] 2. Planejador semanal com arrastar e soltar
-- [ ] 3. Calendário semana/mês, recorrência, exportação .ics
+- [x] 3. Calendário semana/mês, recorrência, exportação .ics (feed assinável e CalDAV dependem da etapa 5)
 - [ ] 4. Projetos e metas financeiras
 - [ ] 5. Backend, sincronização, Web Push, Docker, backup
