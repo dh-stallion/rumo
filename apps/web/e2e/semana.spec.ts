@@ -56,3 +56,19 @@ test.describe('grade da semana', () => {
     await expect(page.getByRole('heading', { name: 'Semana' })).toBeVisible();
   });
 });
+
+test.describe('navegação', () => {
+  test('abas Hoje, Calendário, Planos e Atividades; Ajustes na engrenagem; Pessoas dentro de Calendário', async ({ page }) => {
+    const abas = page.getByRole('navigation', { name: 'Seções' }).getByRole('link');
+    await expect(abas).toHaveText(['Hoje', 'Calendário', 'Planos', 'Atividades']);
+    await page.getByRole('link', { name: 'Ajustes' }).tap();
+    await expect(page.getByRole('heading', { name: 'Ajustes' })).toBeVisible();
+    await page.getByRole('link', { name: 'Hoje' }).first().tap();
+    await expect(page.getByRole('heading', { name: 'Hoje' })).toBeVisible();
+
+    await page.goto('/pessoas');
+    await expect(page).toHaveURL(/\/semana\?visao=pessoas$/);
+    await expect(page.getByRole('radio', { name: 'Pessoas' })).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByRole('button', { name: 'Nova pessoa' })).toBeVisible();
+  });
+});

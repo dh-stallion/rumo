@@ -25,8 +25,21 @@ export const cards = (page: Page) => page.locator('article');
 export const card = (page: Page, nome: string) =>
   cards(page).filter({ has: page.getByRole('heading', { name: nome, exact: true }) });
 
-export async function irPara(page: Page, aba: 'Hoje' | 'Calendário' | 'Atividades' | 'Pessoas' | 'Ajustes') {
-  await page.getByRole('navigation', { name: 'Seções' }).getByRole('link', { name: aba }).tap();
+export type Destino = 'Hoje' | 'Calendário' | 'Planos' | 'Atividades' | 'Pessoas' | 'Ajustes';
+
+/** Abas da barra; Pessoas fica em Calendário → Pessoas e Ajustes na engrenagem de Hoje. */
+export async function irPara(page: Page, destino: Destino) {
+  const abas = page.getByRole('navigation', { name: 'Seções' });
+  if (destino === 'Ajustes') {
+    if (new URL(page.url()).pathname === '/ajustes') return;
+    await abas.getByRole('link', { name: 'Hoje' }).tap();
+    await page.getByRole('link', { name: 'Ajustes' }).tap();
+  } else if (destino === 'Pessoas') {
+    await abas.getByRole('link', { name: 'Calendário' }).tap();
+    await page.getByRole('radio', { name: 'Pessoas' }).tap();
+  } else {
+    await abas.getByRole('link', { name: destino }).tap();
+  }
 }
 
 export async function novaAtividade(

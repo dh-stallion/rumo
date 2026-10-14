@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { haDias } from '../../app/texto';
 import { useAgora } from '../../app/useAgora';
 import { Botao } from '../../components/ui/Botao';
-import { classeCartao, Pagina, Secao, Vazio } from '../../components/ui/Pagina';
+import { classeCartao, Secao, Vazio } from '../../components/ui/Pagina';
 import { Sheet } from '../../components/ui/Sheet';
 import { useToast } from '../../components/ui/Toast';
 import { pausar, registrarContato } from '../../db/acoes';
@@ -12,7 +12,8 @@ import { db } from '../../db/db';
 import { useLista } from '../../db/repo';
 import { PessoaForm } from './PessoaForm';
 
-export function PessoasPage() {
+/** Lista de pessoas (fica dentro de Calendário → Pessoas). */
+export function PessoasLista() {
   const agora = useAgora();
   const pessoas = useLista(db.pessoas);
   const toast = useToast();
@@ -24,7 +25,7 @@ export function PessoasPage() {
     </Botao>
   );
 
-  if (!pessoas) return <Pagina titulo="Pessoas" acao={novo}>{null}</Pagina>;
+  if (!pessoas) return <div className="flex-1" />;
 
   // Quem está há mais tempo além da frequência aparece primeiro.
   const atraso = (p: Pessoa) => (p.frequenciaDias > 0 ? diasSemContato(p, agora) / p.frequenciaDias : 0);
@@ -84,7 +85,11 @@ export function PessoasPage() {
   };
 
   return (
-    <Pagina titulo="Pessoas" acao={novo}>
+    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-1 pb-6">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="text-xl font-bold">Pessoas</h2>
+        {novo}
+      </div>
       {pessoas.length === 0 ? (
         <Vazio>
           <p className="text-base font-medium text-neutral-700 dark:text-neutral-300">Ninguém por aqui ainda.</p>
@@ -113,6 +118,6 @@ export function PessoasPage() {
           />
         )}
       </Sheet>
-    </Pagina>
+    </div>
   );
 }

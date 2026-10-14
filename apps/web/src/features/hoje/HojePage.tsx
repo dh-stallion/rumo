@@ -11,7 +11,8 @@ import {
   type ItemHoje,
   type Sessao,
 } from '@rumo/core';
-import { Check, Clock, Pause } from 'lucide-react';
+import { Check, Clock, Pause, Settings } from 'lucide-react';
+import { Link } from 'react-router';
 import { useState, type ReactNode } from 'react';
 import { haDias } from '../../app/texto';
 import { useAgora } from '../../app/useAgora';
@@ -43,9 +44,22 @@ export function HojePage() {
   const [sessaoAberta, setSessaoAberta] = useState<string | null>(null);
 
   const subtitulo = formatar(agora, "EEEE, d 'de' MMMM");
+  const engrenagem = (
+    <Link
+      to="/ajustes"
+      aria-label="Ajustes"
+      className="grid size-11 place-items-center rounded-full text-neutral-500 active:bg-neutral-200 dark:active:bg-neutral-800"
+    >
+      <Settings size={24} aria-hidden />
+    </Link>
+  );
 
   if (!atividades || !sessoes || !pessoas || !adiamentos || !eventos) {
-    return <Pagina titulo="Hoje" subtitulo={subtitulo}>{null}</Pagina>;
+    return (
+      <Pagina titulo="Hoje" subtitulo={subtitulo} acao={engrenagem}>
+        {null}
+      </Pagina>
+    );
   }
 
   const itens = itensDeAtencao({ atividades, sessoes, pessoas, adiamentos }, agora, cal);
@@ -57,7 +71,7 @@ export function HojePage() {
   };
 
   return (
-    <Pagina titulo="Hoje" subtitulo={subtitulo}>
+    <Pagina titulo="Hoje" subtitulo={subtitulo} acao={engrenagem}>
       <ConviteSemana agora={agora} />
 
       {deHoje.length > 0 && (

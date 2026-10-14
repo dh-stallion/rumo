@@ -24,7 +24,7 @@ export function AjustesPage() {
   const prefs = usePreferencias();
 
   return (
-    <Pagina titulo="Ajustes">
+    <Pagina titulo="Ajustes" voltar={{ para: '/', rotulo: 'Hoje' }}>
       <Secao titulo="Aparência">
         <Segmentado rotulo="Tema" valor={tema} opcoes={opcoesTema} onChange={definirTema} />
       </Secao>

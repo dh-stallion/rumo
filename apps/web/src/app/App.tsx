@@ -1,19 +1,18 @@
-import { CalendarDays, Settings, Sparkles, Sun, Users, type LucideIcon } from 'lucide-react';
+import { CalendarDays, Sparkles, Sun, Target, type LucideIcon } from 'lucide-react';
 import { BrowserRouter, NavLink, Navigate, Route, Routes } from 'react-router';
 import { ToastProvider } from '../components/ui/Toast';
 import { AjustesPage } from '../features/ajustes/AjustesPage';
 import { AtividadesPage } from '../features/atividades/AtividadesPage';
 import { HojePage } from '../features/hoje/HojePage';
-import { PessoasPage } from '../features/pessoas/PessoasPage';
+import { PlanosPage } from '../features/planos/PlanosPage';
 import { SemanaPage } from '../features/semana/SemanaPage';
 import { useTemaAplicado } from './tema';
 
 const abas: { para: string; rotulo: string; Icone: LucideIcon }[] = [
   { para: '/', rotulo: 'Hoje', Icone: Sun },
   { para: '/semana', rotulo: 'Calendário', Icone: CalendarDays },
+  { para: '/planos', rotulo: 'Planos', Icone: Target },
   { para: '/atividades', rotulo: 'Atividades', Icone: Sparkles },
-  { para: '/pessoas', rotulo: 'Pessoas', Icone: Users },
-  { para: '/ajustes', rotulo: 'Ajustes', Icone: Settings },
 ];
 
 function BarraDeAbas() {
@@ -53,7 +52,8 @@ export function App() {
           <Routes>
             <Route path="/" element={<HojePage />} />
             <Route path="/atividades" element={<AtividadesPage />} />
-            <Route path="/pessoas" element={<PessoasPage />} />
+            <Route path="/planos" element={<PlanosPage />} />
+            <Route path="/pessoas" element={<Navigate to="/semana?visao=pessoas" replace />} />
             <Route path="/semana" element={<SemanaPage />} />
             <Route path="/agenda" element={<Navigate to="/semana" replace />} />
             <Route path="/ajustes" element={<AjustesPage />} />

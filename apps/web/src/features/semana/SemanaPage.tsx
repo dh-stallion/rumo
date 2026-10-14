@@ -39,6 +39,7 @@ import { BlocoEvento } from './Blocos';
 import { BlocoSessaoArrastavel, PreviaArraste } from './BlocoArrastavel';
 import { blocosDoDia } from './geometria';
 import { FundoDia, GradeSemanal } from './GradeSemanal';
+import { PessoasLista } from '../pessoas/PessoasLista';
 import { MesView } from './MesView';
 import { SessaoSheet } from './SessaoSheet';
 
@@ -62,7 +63,9 @@ export function SemanaPage() {
   // Visão de 7 colunas em tela cheia ("Planejar a semana"); na URL para Hoje poder abrir direto.
   const [params, setParams] = useSearchParams();
   const telaCheia = params.get('planejar') === '1';
-  const visaoMes = params.get('visao') === 'mes' && !telaCheia;
+  const visao = telaCheia ? 'semana' : (({ mes: 'mes', pessoas: 'pessoas' }) as const)[params.get('visao') as 'mes' | 'pessoas'] ?? 'semana';
+  const visaoMes = visao === 'mes';
+  const visaoPessoas = visao === 'pessoas';
   const [mesRef, setMesRef] = useState(() => agora);
   const [diaSelecionado, setDiaSelecionado] = useState(() => paraDataLocal(agora));
   // Dia a deixar à vista ao abrir a semana (vindo de "Ver na semana").
@@ -83,8 +86,8 @@ export function SemanaPage() {
   const ehEstaSemana = deslocamento === 0;
   const ehEsteMes = formatar(mesRef, 'yyyy-MM') === formatar(agora, 'yyyy-MM');
 
-  function irParaVisao(visao: 'semana' | 'mes') {
-    setParams(visao === 'mes' ? { visao: 'mes' } : {}, { replace: true });
+  function irParaVisao(v: 'semana' | 'mes' | 'pessoas') {
+    setParams(v === 'semana' ? {} : { visao: v }, { replace: true });
   }
 
   function verNaSemana(dia: ISODate) {
@@ -119,6 +122,54 @@ export function SemanaPage() {
 
   const arraste = useArrasteNaGrade({ grade, eventos: eventos ?? [], onSoltar: soltar });
 
+  const navegacao = (
+    <nav className="flex shrink-0 items-center gap-0.5" aria-label={visaoMes ? 'Navegar entre meses' : 'Navegar entre semanas'}>
+      {visaoMes ? (
+        <>
+          <Botao variante="fantasma" className="px-2" aria-label="Mês anterior" onClick={() => setMesRef((m) => mesApos(m, -1, cal))}>
+            <ChevronLeft size={22} />
+          </Botao>
+          <Botao
+            variante="fantasma"
+            className="px-2"
+            disabled={ehEsteMes && diaSelecionado === paraDataLocal(agora)}
+            onClick={() => {
+              setMesRef(agora);
+              setDiaSelecionado(paraDataLocal(agora));
+            }}
+          >
+            Hoje
+          </Botao>
+          <Botao variante="fantasma" className="px-2" aria-label="Mês seguinte" onClick={() => setMesRef((m) => mesApos(m, 1, cal))}>
+            <ChevronRight size={22} />
+          </Botao>
+        </>
+      ) : (
+        <>
+          <Botao variante="fantasma" className="px-2" aria-label="Semana anterior" onClick={() => setDeslocamento((d) => d - 1)}>
+            <ChevronLeft size={22} />
+          </Botao>
+          <Botao variante="fantasma" className="px-2" disabled={ehEstaSemana} onClick={() => setDeslocamento(0)}>
+            Hoje
+          </Botao>
+          <Botao variante="fantasma" className="px-2" aria-label="Semana seguinte" onClick={() => setDeslocamento((d) => d + 1)}>
+            <ChevronRight size={22} />
+          </Botao>
+          <Botao
+            variante="secundario"
+            className="ml-1 px-2"
+            aria-pressed={telaCheia}
+            aria-label={telaCheia ? 'Ver 3 dias' : 'Ver semana toda'}
+            title={telaCheia ? 'Ver 3 dias' : 'Ver semana toda'}
+            onClick={() => setParams(telaCheia ? {} : { planejar: '1' }, { replace: true })}
+          >
+            {telaCheia ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+          </Botao>
+        </>
+      )}
+    </nav>
+  );
+
   return (
     <div
       className={
@@ -128,77 +179,45 @@ export function SemanaPage() {
       }
     >
       <header className={telaCheia ? 'px-3 pt-2 pb-1' : 'px-4 pt-3 pb-2'}>
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="text-sm font-medium text-neutral-500">{visaoMes ? formatar(mesRef, 'yyyy') : rotuloSemana(inicio)}</p>
-            <h1 className={`font-bold tracking-tight ${telaCheia ? 'text-2xl' : 'text-3xl'}`}>
-              {telaCheia ? 'Planejar a semana' : visaoMes ? tituloMes.charAt(0).toUpperCase() + tituloMes.slice(1) : 'Semana'}
-            </h1>
-          </div>
-          <Botao variante="primario" className="px-3" aria-label="Novo evento" onClick={() => setEditandoEvento('novo')}>
-            <Plus size={20} /> Evento
-          </Botao>
-        </div>
-        <nav className="mt-2 flex items-center gap-1" aria-label={visaoMes ? 'Navegar entre meses' : 'Navegar entre semanas'}>
-          {visaoMes ? (
-            <>
-              <Botao variante="fantasma" className="px-2" aria-label="Mês anterior" onClick={() => setMesRef((m) => mesApos(m, -1, cal))}>
-                <ChevronLeft size={22} />
-              </Botao>
-              <Botao
-                variante="fantasma"
-                className="px-3"
-                disabled={ehEsteMes && diaSelecionado === paraDataLocal(agora)}
-                onClick={() => {
-                  setMesRef(agora);
-                  setDiaSelecionado(paraDataLocal(agora));
-                }}
-              >
-                Hoje
-              </Botao>
-              <Botao variante="fantasma" className="px-2" aria-label="Mês seguinte" onClick={() => setMesRef((m) => mesApos(m, 1, cal))}>
-                <ChevronRight size={22} />
-              </Botao>
-            </>
-          ) : (
-            <>
-              <Botao variante="fantasma" className="px-2" aria-label="Semana anterior" onClick={() => setDeslocamento((d) => d - 1)}>
-                <ChevronLeft size={22} />
-              </Botao>
-              <Botao variante="fantasma" className="px-3" disabled={ehEstaSemana} onClick={() => setDeslocamento(0)}>
-                Hoje
-              </Botao>
-              <Botao variante="fantasma" className="px-2" aria-label="Semana seguinte" onClick={() => setDeslocamento((d) => d + 1)}>
-                <ChevronRight size={22} />
-              </Botao>
-            </>
-          )}
-          {!telaCheia && (
-            <div className="ml-auto w-40">
+        {!telaCheia && (
+          <div className="mb-2 flex items-center gap-2">
+            <div className="flex-1">
               <Segmentado
                 rotulo="Visão"
-                valor={visaoMes ? 'mes' : 'semana'}
+                valor={visao}
                 opcoes={[
                   { valor: 'semana', rotulo: 'Semana' },
                   { valor: 'mes', rotulo: 'Mês' },
+                  { valor: 'pessoas', rotulo: 'Pessoas' },
                 ]}
                 onChange={irParaVisao}
               />
             </div>
-          )}
-          {!visaoMes && (
-            <Botao
-              variante="secundario"
-              className={`px-2 ${telaCheia ? 'ml-auto' : ''}`}
-              aria-pressed={telaCheia}
-              aria-label={telaCheia ? 'Ver 3 dias' : 'Ver semana toda'}
-              title={telaCheia ? 'Ver 3 dias' : 'Ver semana toda'}
-              onClick={() => setParams(telaCheia ? {} : { planejar: '1' }, { replace: true })}
-            >
-              {telaCheia ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-            </Botao>
-          )}
-        </nav>
+            {!visaoPessoas && (
+              <Botao variante="primario" className="px-2" aria-label="Novo evento" title="Novo evento" onClick={() => setEditandoEvento('novo')}>
+                <Plus size={22} />
+              </Botao>
+            )}
+          </div>
+        )}
+        {!visaoPessoas && (
+          <div className="flex items-end justify-between gap-2">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-neutral-500">{visaoMes ? formatar(mesRef, 'yyyy') : rotuloSemana(inicio)}</p>
+              <h1 className="truncate text-2xl font-bold tracking-tight">
+                {telaCheia ? 'Planejar a semana' : visaoMes ? tituloMes.charAt(0).toUpperCase() + tituloMes.slice(1) : 'Semana'}
+              </h1>
+            </div>
+            {telaCheia ? (
+              <Botao variante="primario" className="px-3" aria-label="Novo evento" onClick={() => setEditandoEvento('novo')}>
+                <Plus size={20} /> Evento
+              </Botao>
+            ) : (
+              navegacao
+            )}
+          </div>
+        )}
+        {telaCheia && <div className="mt-1">{navegacao}</div>}
       </header>
 
       {visaoMes && atividades && sessoes && eventos && pessoas && (
@@ -217,7 +236,9 @@ export function SemanaPage() {
         />
       )}
 
-      {!visaoMes && <DndContext
+      {visaoPessoas && <PessoasLista />}
+
+      {visao === 'semana' && <DndContext
         sensors={sensores}
         collisionDetection={pointerWithin}
         autoScroll={false}
