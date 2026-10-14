@@ -5,6 +5,7 @@ import { AjustesPage } from '../features/ajustes/AjustesPage';
 import { AtividadesPage } from '../features/atividades/AtividadesPage';
 import { HojePage } from '../features/hoje/HojePage';
 import { PlanosPage } from '../features/planos/PlanosPage';
+import { ProjetoPage } from '../features/planos/ProjetoPage';
 import { SemanaPage } from '../features/semana/SemanaPage';
 import { useTemaAplicado } from './tema';
 
@@ -26,7 +27,7 @@ function BarraDeAbas() {
           <li key={para} className="flex-1">
             <NavLink
               to={para}
-              end
+              end={para === '/'}
               className={({ isActive }) =>
                 `flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${
                   isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-neutral-500'
@@ -53,6 +54,7 @@ export function App() {
             <Route path="/" element={<HojePage />} />
             <Route path="/atividades" element={<AtividadesPage />} />
             <Route path="/planos" element={<PlanosPage />} />
+            <Route path="/planos/projeto/:id" element={<ProjetoPage />} />
             <Route path="/pessoas" element={<Navigate to="/semana?visao=pessoas" replace />} />
             <Route path="/semana" element={<SemanaPage />} />
             <Route path="/agenda" element={<Navigate to="/semana" replace />} />

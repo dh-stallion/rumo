@@ -9,17 +9,16 @@ import {
   type Categoria,
 } from '@rumo/core';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Check, Trash2, X } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { vezes } from '../../app/texto';
 import { Botao } from '../../components/ui/Botao';
 import { Campo, classeInput, Interruptor, Segmentado, Stepper } from '../../components/ui/Campos';
+import { CORES, SeletorCor } from '../../components/ui/SeletorCor';
 import { useToast } from '../../components/ui/Toast';
 import { registrarSessao } from '../../db/acoes';
 import { db } from '../../db/db';
 import { atualizar, criar, excluir, type Dados } from '../../db/repo';
-
-export const CORES = ['#6366f1', '#0ea5e9', '#10b981', '#84cc16', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6'];
 
 const opcoesCategoria = CATEGORIAS.map((c) => ({ valor: c, rotulo: ROTULO_CATEGORIA[c] }));
 
@@ -111,28 +110,7 @@ export function AtividadeForm({ atividade, onFechar }: { atividade?: Atividade; 
         />
       </Campo>
 
-      <fieldset className="space-y-1.5">
-        <legend className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Cor</legend>
-        <div className="grid grid-cols-8 justify-items-center">
-          {CORES.map((c) => (
-            <button
-              key={c}
-              type="button"
-              aria-label={`Cor ${c}`}
-              aria-pressed={cor === c}
-              onClick={() => setCor(c)}
-              className="grid size-11 place-items-center rounded-full"
-            >
-              <span
-                className={`grid size-8 place-items-center rounded-full ${cor === c ? 'ring-2 ring-offset-2 ring-neutral-900 ring-offset-white dark:ring-white dark:ring-offset-neutral-900' : ''}`}
-                style={{ backgroundColor: c }}
-              >
-                {cor === c && <Check size={16} className="text-white" />}
-              </span>
-            </button>
-          ))}
-        </div>
-      </fieldset>
+      <SeletorCor valor={cor} onChange={setCor} />
 
       {atividade && (
         <Interruptor

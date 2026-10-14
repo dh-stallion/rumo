@@ -21,3 +21,4 @@ export * from './calendario/importacao';
 export * from './financas/dinheiro';
 export * from './financas/metas';
 export * from './rules/afazeres';
+export * from './rules/projetos';
