@@ -1,4 +1,4 @@
-import { TABELAS_BACKUP, validarRegistro, type TabelaBackup } from '../backup';
+import { TABELAS_BACKUP, validarRegistro, type TabelaBackup, type TabelasBackup } from '../backup';
 import type { Registro } from '../model';
 
 /**
@@ -12,7 +12,8 @@ import type { Registro } from '../model';
 export const TABELAS_SYNC = TABELAS_BACKUP;
 export type TabelaSync = TabelaBackup;
 
-export type Mudancas = Partial<Record<TabelaSync, Registro[]>>;
+/** Registros por tabela, com o tipo de cada tabela. */
+export type Mudancas = Partial<TabelasBackup>;
 
 export interface PedidoSync {
   /** Último cursor recebido do servidor (0 na primeira vez). */
@@ -51,7 +52,7 @@ export function validarMudancas(mudancas: PedidoSync['mudancas']): { validos: Mu
     for (const dado of Array.isArray(lista) ? lista : []) {
       const id = typeof (dado as { id?: unknown })?.id === 'string' ? (dado as { id: string }).id : null;
       const r = validarRegistro(tabela, dado);
-      if (r.ok) (validos[tabela] ??= []).push(r.registro as Registro);
+      if (r.ok) ((validos[tabela] ??= []) as Registro[]).push(r.registro as Registro);
       else rejeitados.push({ tabela, id, erro: r.erro });
     }
   }
