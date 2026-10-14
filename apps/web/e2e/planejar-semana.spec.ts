@@ -15,7 +15,7 @@ test('convite aparece uma vez por semana, some ao dispensar e volta na semana se
   await page.goto('/');
   await expect(convite(page)).toContainText('Semana nova: planejar?');
 
-  await convite(page).getByRole('button', { name: 'Dispensar convite' }).tap();
+  await convite(page).getByRole('button', { name: 'Agora não' }).tap();
   await expect(convite(page)).toBeHidden();
 
   // Reabrir na mesma semana (inclusive domingo à noite, que já é segunda em UTC): continua dispensado.
@@ -36,7 +36,7 @@ test('com a semana começando no domingo, o convite volta no domingo', async ({ 
   // O estado marcado vem do IndexedDB: espera a gravação antes de seguir.
   await expect(page.getByRole('radio', { name: 'Domingo' })).toHaveAttribute('aria-checked', 'true');
   await irPara(page, 'Hoje');
-  await convite(page).getByRole('button', { name: 'Dispensar convite' }).tap();
+  await convite(page).getByRole('button', { name: 'Agora não' }).tap();
   await reabrirEm(page, '2026-10-17T23:59'); // sábado
   await expect(convite(page)).toBeHidden();
   await reabrirEm(page, '2026-10-18T00:00'); // domingo
@@ -112,4 +112,17 @@ test('"Ver semana toda" também abre pela aba Semana', async ({ page }) => {
   await page.getByRole('button', { name: 'Ver semana toda' }).tap();
   await expect(page.getByRole('heading', { name: 'Planejar a semana' })).toBeVisible();
   await expect.poll(() => diasVisiveis(page)).toHaveLength(7);
+});
+
+test('"Não mostrar mais" desliga o convite (com desfazer) e reflete em Ajustes', async ({ page }) => {
+  await page.goto('/');
+  await convite(page).getByRole('button', { name: 'Não mostrar mais' }).tap();
+  await expect(convite(page)).toBeHidden();
+  await page.getByRole('button', { name: 'Desfazer' }).tap();
+  await expect(convite(page)).toBeVisible();
+  await convite(page).getByRole('button', { name: 'Não mostrar mais' }).tap();
+  await reabrirEm(page, '2026-10-26T09:00'); // semana seguinte: continua desligado
+  await expect(convite(page)).toBeHidden();
+  await irPara(page, 'Ajustes');
+  await expect(page.getByRole('switch', { name: /Convite para planejar a semana/ })).toHaveAttribute('aria-checked', 'false');
 });
