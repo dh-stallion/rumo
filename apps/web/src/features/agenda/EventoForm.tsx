@@ -15,15 +15,22 @@ function proximaHoraCheia() {
 
 export function EventoForm({
   evento,
+  sugestao,
   pessoas,
   onFechar,
 }: {
   evento?: Evento;
+  /** Dia sugerido para um evento novo (09:00); sem ele, a próxima hora cheia. */
+  sugestao?: Date;
   pessoas: Pessoa[];
   onFechar: () => void;
 }) {
   const toast = useToast();
-  const base = evento ? new Date(evento.inicio) : proximaHoraCheia();
+  const base = evento
+    ? new Date(evento.inicio)
+    : sugestao
+      ? combinarDataHora(paraDataLocal(sugestao), '09:00')
+      : proximaHoraCheia();
   const fimBase = evento ? new Date(evento.fim) : new Date(base.getTime() + 3_600_000);
   const [titulo, setTitulo] = useState(evento?.titulo ?? '');
   const [data, setData] = useState(paraDataLocal(base));

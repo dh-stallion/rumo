@@ -25,7 +25,7 @@ export const cards = (page: Page) => page.locator('article');
 export const card = (page: Page, nome: string) =>
   cards(page).filter({ has: page.getByRole('heading', { name: nome, exact: true }) });
 
-export async function irPara(page: Page, aba: 'Hoje' | 'Atividades' | 'Pessoas' | 'Agenda' | 'Ajustes') {
+export async function irPara(page: Page, aba: 'Hoje' | 'Semana' | 'Atividades' | 'Pessoas' | 'Ajustes') {
   await page.getByRole('navigation', { name: 'Seções' }).getByRole('link', { name: aba }).tap();
 }
 
@@ -57,7 +57,7 @@ export async function novoEvento(
   page: Page,
   { titulo, data, inicio, fim, pessoa }: { titulo: string; data: string; inicio: string; fim: string; pessoa?: string },
 ) {
-  await irPara(page, 'Agenda');
+  await irPara(page, 'Semana');
   await page.getByRole('button', { name: 'Novo evento' }).tap();
   await page.getByRole('textbox', { name: 'Título' }).fill(titulo);
   await page.getByLabel('Data').fill(data);

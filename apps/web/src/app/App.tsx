@@ -1,18 +1,18 @@
 import { CalendarDays, Settings, Sparkles, Sun, Users, type LucideIcon } from 'lucide-react';
 import { BrowserRouter, NavLink, Navigate, Route, Routes } from 'react-router';
 import { ToastProvider } from '../components/ui/Toast';
-import { AgendaPage } from '../features/agenda/AgendaPage';
 import { AjustesPage } from '../features/ajustes/AjustesPage';
 import { AtividadesPage } from '../features/atividades/AtividadesPage';
 import { HojePage } from '../features/hoje/HojePage';
 import { PessoasPage } from '../features/pessoas/PessoasPage';
+import { SemanaPage } from '../features/semana/SemanaPage';
 import { useTemaAplicado } from './tema';
 
 const abas: { para: string; rotulo: string; Icone: LucideIcon }[] = [
   { para: '/', rotulo: 'Hoje', Icone: Sun },
+  { para: '/semana', rotulo: 'Semana', Icone: CalendarDays },
   { para: '/atividades', rotulo: 'Atividades', Icone: Sparkles },
   { para: '/pessoas', rotulo: 'Pessoas', Icone: Users },
-  { para: '/agenda', rotulo: 'Agenda', Icone: CalendarDays },
   { para: '/ajustes', rotulo: 'Ajustes', Icone: Settings },
 ];
 
@@ -54,7 +54,8 @@ export function App() {
             <Route path="/" element={<HojePage />} />
             <Route path="/atividades" element={<AtividadesPage />} />
             <Route path="/pessoas" element={<PessoasPage />} />
-            <Route path="/agenda" element={<AgendaPage />} />
+            <Route path="/semana" element={<SemanaPage />} />
+            <Route path="/agenda" element={<Navigate to="/semana" replace />} />
             <Route path="/ajustes" element={<AjustesPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
