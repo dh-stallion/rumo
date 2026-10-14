@@ -1,6 +1,6 @@
 import { paraHoraLocal, type Atividade, type Evento, type Sessao } from '@rumo/core';
 import { AlertTriangle, Check, Lock } from 'lucide-react';
-import type { CSSProperties, HTMLAttributes, Ref } from 'react';
+import type { CSSProperties, HTMLAttributes, ReactNode, Ref } from 'react';
 import { ALTURA_MINIMA_BLOCO, minParaPx, type BlocoNoDia } from './geometria';
 
 /** Posição absoluta de um bloco dentro da coluna do dia. */
@@ -51,7 +51,7 @@ export interface PropsBlocoSessao {
   fantasma?: boolean;
   refArraste?: Ref<HTMLButtonElement>;
   propsArraste?: HTMLAttributes<HTMLButtonElement>;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
 export function BlocoSessao({ bloco, atividade, conflitos, onAbrir, estilo, fantasma, refArraste, propsArraste, children }: PropsBlocoSessao) {

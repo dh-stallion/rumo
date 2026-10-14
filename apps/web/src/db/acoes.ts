@@ -4,6 +4,7 @@ import {
   inicioDoDiaApos,
   type AlvoAdiamento,
   type Atividade,
+  type Intervalo,
   type Pessoa,
   type Sessao,
 } from '@rumo/core';
@@ -54,4 +55,22 @@ export async function pausar(alvoTipo: AlvoAdiamento, id: string, pausada = true
   if (alvoTipo === 'atividade') await atualizar(db.atividades, id, { pausada });
   else await atualizar(db.pessoas, id, { pausada });
   return () => pausar(alvoTipo, id, !pausada);
+}
+
+/** Cria uma sessão planejada; devolve a sessão e a função que desfaz. */
+export async function planejarSessao(atividade: Atividade, intervalo: Intervalo) {
+  const sessao = await criar(db.sessoes, {
+    atividadeId: atividade.id,
+    inicio: intervalo.inicio,
+    fim: intervalo.fim,
+    origem: 'planejada',
+  });
+  return { sessao, desfazer: () => excluir(db.sessoes, sessao.id) };
+}
+
+/** Muda horário e/ou duração; devolve a função que restaura o anterior. */
+export async function moverSessao(sessao: Sessao, intervalo: Intervalo) {
+  const anterior = { inicio: sessao.inicio, fim: sessao.fim };
+  await atualizar(db.sessoes, sessao.id, { inicio: intervalo.inicio, fim: intervalo.fim });
+  return () => atualizar(db.sessoes, sessao.id, anterior);
 }

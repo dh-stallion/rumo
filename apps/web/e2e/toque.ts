@@ -17,7 +17,23 @@ export async function gestos(page: Page) {
     }
   }
 
+  let pos = { x: 0, y: 0 };
   return {
+    /** Passo a passo, para gestos com várias fases (ex.: segurar na borda até a grade rolar). */
+    async pressionar(p: { x: number; y: number }) {
+      pos = p;
+      await enviar('touchStart', p.x, p.y);
+    },
+    async moverPara(p: { x: number; y: number }, passos = 10) {
+      await trajeto(pos, p, passos, 20);
+      pos = p;
+    },
+    esperar,
+    async soltar() {
+      await enviar('touchEnd');
+      // O app ignora toques logo após um arraste (clique fantasma do fim do gesto).
+      await esperar(450);
+    },
     /** Deslizar rápido (rolagem), sem segurar. */
     async deslizar(de: { x: number; y: number }, ate: { x: number; y: number }) {
       await enviar('touchStart', de.x, de.y);
@@ -76,6 +92,7 @@ export async function pontoNaGrade(page: Page, dia: string, hora: string, desloc
 
 /** Rola a grade na vertical para deixar um horário perto do topo. */
 export async function rolarGradePara(page: Page, hora: number) {
+  await page.locator('[data-grade]').waitFor();
   await page.evaluate((hora) => {
     const g = document.querySelector<HTMLElement>('[data-grade]')!;
     g.scrollTop = hora * 56 - 20;

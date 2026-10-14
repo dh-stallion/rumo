@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Evento } from '../model';
 import { atividade, sessao, SP } from '../test/fabricas';
-import { proximosCompromissos, rotuloDia } from './compromissos';
+import { diaCurto, proximosCompromissos, rotuloDia } from './compromissos';
 
 const terca = SP('2026-10-13T12:00');
 
@@ -80,6 +80,14 @@ describe('proximosCompromissos', () => {
       atividades: [violao, excluida],
     };
     expect(resumo(terca, dados)).toEqual([]);
+  });
+});
+
+describe('diaCurto', () => {
+  it('abrevia com acento e no fuso de São Paulo', () => {
+    expect(diaCurto(SP('2026-10-17T12:00'))).toBe('sáb');
+    expect(diaCurto(SP('2026-10-18T23:30'))).toBe('dom'); // segunda em UTC
+    expect(diaCurto(SP('2026-10-12T00:00'))).toBe('seg');
   });
 });
 

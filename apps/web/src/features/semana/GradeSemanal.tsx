@@ -1,4 +1,4 @@
-import { formatar, paraDataLocal } from '@rumo/core';
+import { diaCurto, formatar, paraDataLocal } from '@rumo/core';
 import { useLayoutEffect, useRef, type ReactNode, type RefObject } from 'react';
 import { HORA_PX, LARGURA_HORAS, minParaPx } from './geometria';
 
@@ -65,7 +65,7 @@ export function GradeSemanal({
               className="sticky top-0 z-20 flex snap-start flex-col items-center border-b border-black/5 bg-neutral-50 py-1 dark:border-white/10 dark:bg-neutral-950"
             >
               <span className={`text-[11px] font-medium uppercase ${ehHoje ? 'text-indigo-600 dark:text-indigo-400' : 'text-neutral-500'}`}>
-                {formatar(d, 'EEE').replace('.', '')}
+                {diaCurto(d)}
               </span>
               <span
                 className={`grid size-7 place-items-center rounded-full text-[15px] font-semibold tabular-nums ${

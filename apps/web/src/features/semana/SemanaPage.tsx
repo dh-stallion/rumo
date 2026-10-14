@@ -1,6 +1,9 @@
+import { DndContext, DragOverlay, pointerWithin } from '@dnd-kit/core';
 import {
   ativo,
   conflitosComFixos,
+  diaCurto,
+  duracaoMin,
   formatar,
   inicioDaSemana,
   inicioDoDiaApos,
@@ -10,17 +13,24 @@ import {
   type Sessao,
 } from '@rumo/core';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useAgora } from '../../app/useAgora';
 import { Botao } from '../../components/ui/Botao';
 import { Sheet } from '../../components/ui/Sheet';
+import { useToast } from '../../components/ui/Toast';
+import { moverSessao, planejarSessao } from '../../db/acoes';
 import { db } from '../../db/db';
 import { useCalendario } from '../../db/preferencias';
 import { useLista } from '../../db/repo';
 import { EventoForm } from '../agenda/EventoForm';
-import { BlocoEvento, BlocoSessao } from './Blocos';
+import { AgendarSheet } from './AgendarSheet';
+import { alinharAoDedo, useArrasteNaGrade, useSensoresDeArraste, type Alvo, type DadosArraste, type ResultadoArraste } from './arraste';
+import { BancoAfazeres } from './BancoAfazeres';
+import { BlocoEvento } from './Blocos';
+import { BlocoSessaoArrastavel, PreviaArraste } from './BlocoArrastavel';
 import { blocosDoDia } from './geometria';
 import { FundoDia, GradeSemanal } from './GradeSemanal';
+import { SessaoSheet } from './SessaoSheet';
 
 /** "12 – 18 de outubro" ou "28 de setembro – 4 de outubro". */
 function rotuloSemana(inicio: Date): string {
@@ -33,12 +43,19 @@ function rotuloSemana(inicio: Date): string {
 export function SemanaPage() {
   const agora = useAgora();
   const cal = useCalendario();
+  const toast = useToast();
   const atividades = useLista(db.atividades);
   const sessoes = useLista(db.sessoes);
   const eventos = useLista(db.eventos);
   const pessoas = useLista(db.pessoas);
   const [deslocamento, setDeslocamento] = useState(0);
   const [editandoEvento, setEditandoEvento] = useState<Evento | 'novo' | null>(null);
+  const [agendando, setAgendando] = useState<Atividade | null>(null);
+  const [sessaoAberta, setSessaoAberta] = useState<string | null>(null);
+  const [bancoAberto, setBancoAberto] = useState(false);
+  const [larguraColuna, setLarguraColuna] = useState(100);
+  const grade = useRef<HTMLDivElement>(null);
+  const sensores = useSensoresDeArraste();
 
   const inicio = inicioDoDiaApos(inicioDaSemana(agora, cal), deslocamento * 7);
   const chave = paraDataLocal(inicio);
@@ -46,6 +63,24 @@ export function SemanaPage() {
   const dias = useMemo(() => Array.from({ length: 7 }, (_, i) => inicioDoDiaApos(inicio, i)), [chave]);
   const porId = useMemo(() => new Map((atividades ?? []).map((a) => [a.id, a])), [atividades]);
   const ehEstaSemana = deslocamento === 0;
+
+  async function soltar({ dados, alvo }: ResultadoArraste) {
+    const quando = `${diaCurto(alvo.intervalo.inicio)} ${formatar(alvo.intervalo.inicio, 'HH:mm')}`;
+    const aviso = alvo.conflitos.length ? ` · conflito com ${alvo.conflitos.map((c) => c.titulo).join(', ')}` : '';
+    if (dados.tipo === 'banco') {
+      const { desfazer } = await planejarSessao(dados.atividade, alvo.intervalo);
+      setBancoAberto(false); // deixa o resultado à vista; reabrir é um toque
+      toast({ texto: `${dados.atividade.nome}: ${quando}${aviso}`, acao: { rotulo: 'Desfazer', fn: desfazer } });
+      return;
+    }
+    if (alvo.intervalo.inicio === dados.sessao.inicio && alvo.intervalo.fim === dados.sessao.fim) return;
+    const desfazer = await moverSessao(dados.sessao, alvo.intervalo);
+    const texto =
+      dados.tipo === 'redim' ? `${dados.atividade.nome}: ${duracaoMin(alvo.intervalo)} min` : `${dados.atividade.nome}: ${quando}`;
+    toast({ texto: `${texto}${aviso}`, acao: { rotulo: 'Desfazer', fn: desfazer } });
+  }
+
+  const arraste = useArrasteNaGrade({ grade, eventos: eventos ?? [], onSoltar: soltar });
 
   return (
     <div className="flex h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom))] flex-col pt-[env(safe-area-inset-top)]">
@@ -72,23 +107,63 @@ export function SemanaPage() {
         </nav>
       </header>
 
-      {atividades && sessoes && eventos && (
-        <GradeSemanal
-          dias={dias}
-          agora={agora}
-          modo="tres"
-          renderDia={(dia) => (
-            <ConteudoDia
-              dia={dia}
-              agora={agora}
-              eventos={eventos}
-              sessoes={sessoes}
-              atividades={porId}
-              onAbrirEvento={setEditandoEvento}
+      <DndContext
+        sensors={sensores}
+        collisionDetection={pointerWithin}
+        autoScroll={false}
+        onDragStart={(e) => {
+          setLarguraColuna(grade.current?.querySelector<HTMLElement>('[data-dia]')?.offsetWidth ?? 100);
+          arraste.onDragStart(e);
+        }}
+        onDragEnd={arraste.onDragEnd}
+        onDragCancel={arraste.onDragCancel}
+      >
+        {atividades && sessoes && eventos ? (
+          <GradeSemanal
+            dias={dias}
+            agora={agora}
+            modo="tres"
+            refRolagem={grade}
+            renderDia={(dia) => (
+              <ConteudoDia
+                dia={dia}
+                agora={agora}
+                eventos={eventos}
+                sessoes={sessoes}
+                atividades={porId}
+                ativo={arraste.ativo}
+                alvo={arraste.alvo}
+                onAbrirEvento={(e) => !arraste.acabouDeArrastar() && setEditandoEvento(e)}
+                onAbrirSessao={(s) => !arraste.acabouDeArrastar() && setSessaoAberta(s.id)}
+              />
+            )}
+          />
+        ) : (
+          <div className="flex-1" />
+        )}
+
+        <BancoAfazeres
+          atividades={atividades ?? []}
+          sessoes={sessoes ?? []}
+          inicioSemana={inicio}
+          aberto={bancoAberto}
+          arrastando={arraste.ativo?.tipo === 'banco'}
+          onAlternar={() => setBancoAberto((a) => !a)}
+          onEscolher={setAgendando}
+          acabouDeArrastar={arraste.acabouDeArrastar}
+        />
+
+        <DragOverlay dropAnimation={null} modifiers={arraste.ativo?.tipo === 'banco' ? [alinharAoDedo] : []}>
+          {arraste.ativo && arraste.ativo.tipo !== 'redim' && (
+            <PreviaArraste
+              atividade={arraste.ativo.atividade}
+              duracao={arraste.ativo.tipo === 'banco' ? arraste.ativo.atividade.duracaoPadraoMin : duracaoMin(arraste.ativo.sessao)}
+              alvo={arraste.alvo}
+              largura={larguraColuna - 4}
             />
           )}
-        />
-      )}
+        </DragOverlay>
+      </DndContext>
 
       <Sheet
         aberto={editandoEvento !== null}
@@ -105,6 +180,12 @@ export function SemanaPage() {
           />
         )}
       </Sheet>
+
+      <Sheet aberto={agendando !== null} onFechar={() => setAgendando(null)} titulo={agendando ? `Agendar ${agendando.nome}` : 'Agendar'}>
+        {agendando && <AgendarSheet key={agendando.id} atividade={agendando} dias={dias} agora={agora} onFechar={() => setAgendando(null)} />}
+      </Sheet>
+
+      <SessaoSheet sessaoId={sessaoAberta} onFechar={() => setSessaoAberta(null)} />
     </div>
   );
 }
@@ -115,28 +196,44 @@ function ConteudoDia({
   eventos,
   sessoes,
   atividades,
+  ativo: emArraste,
+  alvo,
   onAbrirEvento,
+  onAbrirSessao,
 }: {
   dia: Date;
   agora: Date;
   eventos: Evento[];
   sessoes: Sessao[];
   atividades: Map<string, Atividade>;
+  ativo: DadosArraste | null;
+  alvo: Alvo | null;
   onAbrirEvento: (e: Evento) => void;
+  onAbrirSessao: (s: Sessao) => void;
 }) {
-  const blocosEventos = blocosDoDia(eventos.filter(ativo), dia);
-  const blocosSessoes = blocosDoDia(
-    sessoes.filter((s) => ativo(s) && atividades.get(s.atividadeId)),
+  // Eventos e sessões dividem as faixas juntos: um conflito aparece lado a lado, não sobreposto.
+  const blocos = blocosDoDia<Evento | Sessao>(
+    [...eventos.filter(ativo), ...sessoes.filter((s) => ativo(s) && atividades.get(s.atividadeId))],
     dia,
   );
+  const idArrastado = emArraste && emArraste.tipo !== 'banco' ? emArraste.sessao.id : null;
   return (
     <FundoDia dia={dia} agora={agora}>
-      {blocosEventos.map((b) => (
-        <BlocoEvento key={b.item.id} bloco={b} onAbrir={onAbrirEvento} />
-      ))}
-      {blocosSessoes.map((b) => (
-        <BlocoSessao key={b.item.id} bloco={b} atividade={atividades.get(b.item.atividadeId)!} conflitos={conflitosComFixos(b.item, eventos)} />
-      ))}
+      {blocos.map(({ item, ...b }) =>
+        'titulo' in item ? (
+          <BlocoEvento key={item.id} bloco={{ ...b, item }} onAbrir={onAbrirEvento} />
+        ) : (
+          <BlocoSessaoArrastavel
+            key={item.id}
+            bloco={{ ...b, item }}
+            atividade={atividades.get(item.atividadeId)!}
+            conflitos={conflitosComFixos(item, eventos)}
+            onAbrir={onAbrirSessao}
+            movendo={idArrastado === item.id && emArraste?.tipo === 'sessao'}
+            redimensionando={idArrastado === item.id && emArraste?.tipo === 'redim' && alvo ? alvo.intervalo : null}
+          />
+        ),
+      )}
     </FundoDia>
   );
 }

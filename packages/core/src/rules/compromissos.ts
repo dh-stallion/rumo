@@ -72,6 +72,10 @@ export function proximosCompromissos(
 }
 
 const DIAS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+const DIAS_CURTOS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+
+/** 'seg', 'ter' … 'sáb' (o date-fns em pt-BR escreve "sab", sem acento). */
+export const diaCurto = (data: Date | string, fuso = FUSO_PADRAO) => DIAS_CURTOS[Number(formatar(data, 'i', fuso)) % 7]!;
 
 /** "Hoje", "Amanhã" ou "Quinta, 16/10". */
 export function rotuloDia(data: ISODate, agora: Date, fuso = FUSO_PADRAO): string {
