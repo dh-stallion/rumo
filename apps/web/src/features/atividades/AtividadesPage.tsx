@@ -15,10 +15,10 @@ import { Botao } from '../../components/ui/Botao';
 import { classeCartao, Pagina, Secao, Vazio } from '../../components/ui/Pagina';
 import { Sheet } from '../../components/ui/Sheet';
 import { useToast } from '../../components/ui/Toast';
-import { pausar, registrarSessao } from '../../db/acoes';
+import { pausar, registrarFeito } from '../../db/acoes';
 import { db } from '../../db/db';
 import { useCalendario } from '../../db/preferencias';
-import { excluir, useLista } from '../../db/repo';
+import { useLista } from '../../db/repo';
 import { AtividadeForm } from './AtividadeForm';
 
 const porNome = (a: Atividade, b: Atividade) => a.nome.localeCompare(b.nome, 'pt-BR');
@@ -132,11 +132,8 @@ function Lista({
                 variante="primario"
                 aria-label={`Fiz ${a.nome} hoje`}
                 onClick={async () => {
-                  const s = await registrarSessao(a);
-                  toast({
-                    texto: `${a.nome}: registrado`,
-                    acao: { rotulo: 'Desfazer', fn: () => excluir(db.sessoes, s.id) },
-                  });
+                  const desfazer = await registrarFeito(a, sessoes);
+                  toast({ texto: `${a.nome}: registrado`, acao: { rotulo: 'Desfazer', fn: desfazer } });
                 }}
               >
                 <Check size={18} /> Fiz hoje

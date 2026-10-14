@@ -1,5 +1,5 @@
 import { ativo, type Atividade, type Evento, type ISODate, type Sessao } from '../model';
-import { combinarDataHora, formatar, FUSO_PADRAO, inicioDoDiaApos, paraDataLocal } from '../time';
+import { combinarDataHora, formatar, FUSO_PADRAO, inicioDoDia, inicioDoDiaApos, paraDataLocal } from '../time';
 
 /** Algo marcado na agenda: um evento ou uma sessão planejada de uma atividade. */
 export type Compromisso =
@@ -48,6 +48,18 @@ export function compromissosEntre(dados: DadosCompromissos, inicio: Date, fim: D
     itens.push({ tipo: 'sessao', id: s.id, inicio: s.inicio, fim: s.fim, titulo: atividade.nome, pessoaId: null, fixo: false, sessao: s, atividade });
   }
   return itens.sort(ordem);
+}
+
+/**
+ * O topo de "Hoje": eventos que tocam o dia (inclusive os que vêm da véspera)
+ * e sessões planejadas que começam hoje, em ordem de horário.
+ */
+export function compromissosDeHoje(dados: DadosCompromissos, agora: Date, fuso = FUSO_PADRAO): Compromisso[] {
+  const ini = inicioDoDia(agora, fuso);
+  const fim = inicioDoDiaApos(agora, 1, fuso);
+  const eventos = dados.eventos.filter((e) => ativo(e) && new Date(e.inicio) < fim && new Date(e.fim) > ini).map(compromissoDeEvento);
+  const sessoes = compromissosEntre({ ...dados, eventos: [] }, ini, fim);
+  return [...eventos, ...sessoes].sort(ordem);
 }
 
 /**

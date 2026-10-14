@@ -1,7 +1,9 @@
 import {
+  comoRegistrada,
   idAdiamento,
   inicioDoDia,
   inicioDoDiaApos,
+  planejadaDeHoje,
   type AlvoAdiamento,
   type Atividade,
   type Intervalo,
@@ -73,4 +75,22 @@ export async function moverSessao(sessao: Sessao, intervalo: Intervalo) {
   const anterior = { inicio: sessao.inicio, fim: sessao.fim };
   await atualizar(db.sessoes, sessao.id, { inicio: intervalo.inicio, fim: intervalo.fim });
   return () => atualizar(db.sessoes, sessao.id, anterior);
+}
+
+/** Converte uma sessão planejada em registrada (ver regra em core); devolve a função que desfaz. */
+export async function marcarFeita(sessao: Sessao) {
+  const anterior = { inicio: sessao.inicio, fim: sessao.fim, origem: sessao.origem };
+  await atualizar(db.sessoes, sessao.id, comoRegistrada(sessao, new Date()));
+  return () => atualizar(db.sessoes, sessao.id, anterior);
+}
+
+/**
+ * "Feito"/"Fiz hoje": se há uma sessão planejada para hoje, ela vira registrada
+ * (sem duplicar); senão, registra uma sessão nova.
+ */
+export async function registrarFeito(atividade: Atividade, sessoes: readonly Sessao[]) {
+  const planejada = planejadaDeHoje(atividade.id, sessoes, new Date());
+  if (planejada) return marcarFeita(planejada);
+  const s = await registrarSessao(atividade);
+  return () => excluir(db.sessoes, s.id);
 }

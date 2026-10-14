@@ -12,31 +12,31 @@ import {
   type Sessao,
 } from '@rumo/core';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { AlertTriangle, Trash2 } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { AlertTriangle, Check, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { useAgora } from '../../app/useAgora';
 import { Botao } from '../../components/ui/Botao';
 import { Sheet } from '../../components/ui/Sheet';
 import { useToast } from '../../components/ui/Toast';
-import { moverSessao } from '../../db/acoes';
+import { marcarFeita, moverSessao } from '../../db/acoes';
 import { db } from '../../db/db';
 import { useCalendario } from '../../db/preferencias';
 import { excluir, useLista } from '../../db/repo';
 import { minutosDe, SeletorDiaHora } from './SeletorDiaHora';
 
 /** Folha de uma sessão (aberta pela grade ou por "Hoje"): ver, mudar dia/hora/duração, remover. */
-export function SessaoSheet({ sessaoId, onFechar, acoes }: { sessaoId: string | null; onFechar: () => void; acoes?: (s: Sessao) => ReactNode }) {
+export function SessaoSheet({ sessaoId, onFechar }: { sessaoId: string | null; onFechar: () => void }) {
   const sessao = useLiveQuery(() => (sessaoId ? db.sessoes.get(sessaoId) : undefined), [sessaoId]);
   const atividade = useLiveQuery(() => (sessao ? db.atividades.get(sessao.atividadeId) : undefined), [sessao?.atividadeId]);
   const visivel = !!sessaoId && !!sessao && ativo(sessao) && !!atividade;
   return (
     <Sheet aberto={!!sessaoId} onFechar={onFechar} titulo={atividade?.nome ?? 'Sessão'}>
-      {visivel && <Conteudo key={`${sessao.id}:${sessao.atualizadoEm}`} sessao={sessao} onFechar={onFechar} acoes={acoes} />}
+      {visivel && <Conteudo key={`${sessao.id}:${sessao.atualizadoEm}`} sessao={sessao} onFechar={onFechar} />}
     </Sheet>
   );
 }
 
-function Conteudo({ sessao, onFechar, acoes }: { sessao: Sessao; onFechar: () => void; acoes?: (s: Sessao) => ReactNode }) {
+function Conteudo({ sessao, onFechar }: { sessao: Sessao; onFechar: () => void }) {
   const toast = useToast();
   const agora = useAgora();
   const cal = useCalendario();
@@ -61,6 +61,12 @@ function Conteudo({ sessao, onFechar, acoes }: { sessao: Sessao; onFechar: () =>
     toast({ texto: 'Sessão atualizada', acao: { rotulo: 'Desfazer', fn: desfazer } });
   }
 
+  async function feito() {
+    const desfazer = await marcarFeita(sessao);
+    onFechar();
+    toast({ texto: 'Sessão registrada como feita', acao: { rotulo: 'Desfazer', fn: desfazer } });
+  }
+
   async function remover() {
     const desfazer = await excluir(db.sessoes, sessao.id);
     onFechar();
@@ -83,7 +89,11 @@ function Conteudo({ sessao, onFechar, acoes }: { sessao: Sessao; onFechar: () =>
         </p>
       )}
 
-      {acoes?.(sessao)}
+      {planejada && (
+        <Botao variante="primario" className="w-full" onClick={feito}>
+          <Check size={18} /> Feito
+        </Botao>
+      )}
 
       {planejada && (
         <section className="space-y-4 border-t border-black/5 pt-4 dark:border-white/10">

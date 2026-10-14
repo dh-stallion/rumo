@@ -52,6 +52,27 @@ Observações:
 - Apps instalados na tela inicial não têm os dados apagados automaticamente pelo iOS. Mesmo assim,
   faça backups: veja abaixo.
 
+## Planejador semanal (aba Semana)
+
+- **Grade**: no celular mostra 3 dias por vez; deslize para os lados (encaixa por dia). Em telas largas,
+  os 7 dias. Abre em hoje, às 7h. ‹ › trocam de semana, respeitando o início de semana dos Ajustes.
+- **Banco de afazeres** (barra inferior): atividades por categoria com "X de Y agendados" (planejadas
+  + feitas na semana).
+  - **Segure** um item (toque longo, ~¼ s) e arraste para um dia/hora: cria uma sessão planejada com a
+    duração padrão. Pode repetir quantas vezes quiser.
+  - **Toque** num item para escolher dia, horário e duração sem arrastar.
+- **Blocos**: segure para mover (encostar o dedo na borda rola a grade até outros dias); arraste a
+  alça de baixo para mudar a duração; toque para abrir a folha (feito, mudar dia/hora/duração, remover).
+  Deslizar rápido sobre um bloco só rola a grade.
+- **Eventos fixos** aparecem com cadeado e não se movem. Sessão que se sobrepõe a um fixo fica com
+  contorno vermelho e aviso (encostar não conta). Eventos são criados pelo botão **+ Evento**.
+- **Feito**: uma sessão planejada que já começou vira registrada no mesmo horário; uma futura passa a
+  terminar agora. "Feito" em Hoje e "Fiz hoje" em Atividades convertem a planejada do dia, se houver.
+- Tudo tem **Desfazer** no aviso que aparece no topo.
+
+As sessões planejadas de hoje aparecem no topo de **Hoje**, e as dos próximos 7 dias em
+**Próximos compromissos**.
+
 ## Backup dos dados
 
 Em **Ajustes → Backup**:
@@ -100,7 +121,7 @@ Cada card tem **feito**, **adiar** (amanhã, em 3 dias, semana que vem) e **paus
 ## Etapas
 
 - [x] 1. Núcleo: atividades, pessoas, "fiz hoje" / "falei com", tela Hoje
-- [ ] 2. Planejador semanal com arrastar e soltar
+- [x] 2. Planejador semanal com arrastar e soltar
 - [ ] 3. Calendário semana/mês, recorrência, exportação .ics
 - [ ] 4. Projetos e metas financeiras
 - [ ] 5. Backend, sincronização, Web Push, Docker, backup

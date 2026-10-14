@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Evento } from '../model';
 import { atividade, sessao, SP } from '../test/fabricas';
-import { diaCurto, proximosCompromissos, rotuloDia } from './compromissos';
+import { compromissosDeHoje, diaCurto, proximosCompromissos, rotuloDia } from './compromissos';
 
 const terca = SP('2026-10-13T12:00');
 
@@ -80,6 +80,27 @@ describe('proximosCompromissos', () => {
       atividades: [violao, excluida],
     };
     expect(resumo(terca, dados)).toEqual([]);
+  });
+});
+
+describe('compromissosDeHoje', () => {
+  it('eventos que tocam o dia e sessões planejadas que começam hoje, em ordem', () => {
+    const dados = {
+      eventos: [evento('Dentista', '2026-10-13T15:00'), evento('Virada', '2026-10-12T23:30'), evento('Amanhã', '2026-10-14T09:00')],
+      sessoes: [
+        planejada('2026-10-13T08:00'),
+        sessao(SP('2026-10-13T07:00'), { atividadeId: 'a1', origem: 'registrada' }),
+        planejada('2026-10-13T23:59'),
+        planejada('2026-10-14T00:00'),
+      ],
+      atividades: [violao],
+    };
+    expect(compromissosDeHoje(dados, terca).map((c) => `${c.tipo}:${c.titulo}`)).toEqual([
+      'evento:Virada',
+      'sessao:Violão',
+      'evento:Dentista',
+      'sessao:Violão',
+    ]);
   });
 });
 

@@ -1,6 +1,5 @@
 import {
-  compromissoDeEvento,
-  eventosDoDia,
+  compromissosDeHoje,
   formatar,
   inicioDoDiaApos,
   itensDeAtencao,
@@ -10,6 +9,7 @@ import {
   type Compromisso,
   type Evento,
   type ItemHoje,
+  type Sessao,
 } from '@rumo/core';
 import { Check, Clock, Pause } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
@@ -19,11 +19,12 @@ import { Botao } from '../../components/ui/Botao';
 import { classeCartao, Pagina, Secao, Vazio } from '../../components/ui/Pagina';
 import { Sheet } from '../../components/ui/Sheet';
 import { useToast } from '../../components/ui/Toast';
-import { adiar, pausar, registrarContato, registrarSessao } from '../../db/acoes';
+import { adiar, pausar, registrarContato, registrarFeito } from '../../db/acoes';
 import { db } from '../../db/db';
 import { useCalendario } from '../../db/preferencias';
-import { excluir, useLista } from '../../db/repo';
+import { useLista } from '../../db/repo';
 import { EventoForm } from '../agenda/EventoForm';
+import { SessaoSheet } from '../semana/SessaoSheet';
 import { ListaCompromissos, ProximosCompromissos } from './Compromissos';
 
 type Alvo = { tipo: AlvoAdiamento; id: string; nome: string };
@@ -38,6 +39,7 @@ export function HojePage() {
   const eventos = useLista(db.eventos);
   const [adiando, setAdiando] = useState<Alvo | null>(null);
   const [editandoEvento, setEditandoEvento] = useState<Evento | 'novo' | null>(null);
+  const [sessaoAberta, setSessaoAberta] = useState<string | null>(null);
 
   const subtitulo = formatar(agora, "EEEE, d 'de' MMMM");
 
@@ -46,10 +48,11 @@ export function HojePage() {
   }
 
   const itens = itensDeAtencao({ atividades, sessoes, pessoas, adiamentos }, agora, cal);
-  const deHoje = eventosDoDia(eventos, agora).map(compromissoDeEvento);
+  const deHoje = compromissosDeHoje({ eventos, sessoes, atividades }, agora);
   const proximos = proximosCompromissos({ eventos, sessoes, atividades }, agora);
   const abrir = (c: Compromisso) => {
     if (c.tipo === 'evento') setEditandoEvento(c.evento);
+    else setSessaoAberta(c.sessao.id);
   };
 
   return (
@@ -70,7 +73,7 @@ export function HojePage() {
           <ul className="space-y-3">
             {itens.map((item) => (
               <li key={item.tipo === 'atividade' ? item.atividade.id : item.pessoa.id}>
-                <CartaoHoje item={item} onAdiar={setAdiando} />
+                <CartaoHoje item={item} sessoes={sessoes} onAdiar={setAdiando} />
               </li>
             ))}
           </ul>
@@ -100,12 +103,14 @@ export function HojePage() {
         )}
       </Sheet>
 
+      <SessaoSheet sessaoId={sessaoAberta} onFechar={() => setSessaoAberta(null)} />
+
       <AdiarSheet alvo={adiando} agora={agora} diasAteProximaSemana={7 - posicaoNaSemana(agora, cal)} onFechar={() => setAdiando(null)} />
     </Pagina>
   );
 }
 
-function CartaoHoje({ item, onAdiar }: { item: ItemHoje; onAdiar: (a: Alvo) => void }) {
+function CartaoHoje({ item, sessoes, onAdiar }: { item: ItemHoje; sessoes: Sessao[]; onAdiar: (a: Alvo) => void }) {
   const toast = useToast();
 
   if (item.tipo === 'atividade') {
@@ -120,8 +125,8 @@ function CartaoHoje({ item, onAdiar }: { item: ItemHoje; onAdiar: (a: Alvo) => v
         <Botao
           variante="primario"
           onClick={async () => {
-            const s = await registrarSessao(a);
-            toast({ texto: `${a.nome}: registrado`, acao: { rotulo: 'Desfazer', fn: () => excluir(db.sessoes, s.id) } });
+            const desfazer = await registrarFeito(a, sessoes);
+            toast({ texto: `${a.nome}: registrado`, acao: { rotulo: 'Desfazer', fn: desfazer } });
           }}
         >
           <Check size={18} /> Feito
