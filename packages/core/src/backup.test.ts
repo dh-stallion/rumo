@@ -33,6 +33,7 @@ const tabelas = (): TabelasBackup => ({
       inicioSemana: 0,
       convitePlanejar: false,
       semanaConviteTratada: '2026-10-12',
+      notificacoes: { resumo: true, horaResumo: '07:30', eventos: false, minutosAntes: 30, contatos: true },
     },
   ],
   projetos: [
@@ -123,6 +124,7 @@ describe('validarBackup', () => {
     const antigo = viaArquivo(criarBackup(tabelas())) as { tabelas: { preferencias: Record<string, unknown>[] } };
     delete antigo.tabelas.preferencias[0]!.convitePlanejar;
     delete antigo.tabelas.preferencias[0]!.semanaConviteTratada;
+    delete antigo.tabelas.preferencias[0]!.notificacoes;
     const r = validarBackup(antigo);
     expect(r.ok && r.backup.tabelas.preferencias[0]).toMatchObject({ convitePlanejar: true, semanaConviteTratada: null });
   });

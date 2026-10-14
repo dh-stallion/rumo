@@ -137,7 +137,35 @@ const preferencias: z.ZodType<Preferencias> = z.object({
   // Campos posteriores à versão 1 do formato: backups antigos recebem o padrão.
   convitePlanejar: z.boolean().default(PREFERENCIAS_PADRAO.convitePlanejar),
   semanaConviteTratada: z.iso.date().nullable().default(PREFERENCIAS_PADRAO.semanaConviteTratada),
+  notificacoes: z
+    .object({
+      resumo: z.boolean(),
+      horaResumo: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+      eventos: z.boolean(),
+      minutosAntes: z.number().int().min(0).max(24 * 60),
+      contatos: z.boolean(),
+    })
+    .default(PREFERENCIAS_PADRAO.notificacoes),
 });
+
+/** Esquema de cada tabela, para validar registros soltos (ex.: recebidos na sincronização). */
+const ESQUEMAS_REGISTRO = { atividades: atividade, sessoes: sessao, pessoas: pessoa, eventos: evento, adiamentos: adiamento, preferencias, projetos: projeto, metas: meta } satisfies Record<
+  TabelaBackup,
+  z.ZodType
+>;
+
+export type TabelaBackup = (typeof TABELAS_BACKUP)[number];
+
+export type ResultadoRegistro<T extends TabelaBackup> = { ok: true; registro: TabelasBackup[T][number] } | { ok: false; erro: string };
+
+/** Valida um registro de uma tabela; a mensagem segue o mesmo formato da validação do backup. */
+export function validarRegistro<T extends TabelaBackup>(tabela: T, dado: unknown): ResultadoRegistro<T> {
+  const r = ESQUEMAS_REGISTRO[tabela].safeParse(dado, { reportInput: true });
+  if (r.success) return { ok: true, registro: r.data as TabelasBackup[T][number] };
+  const i = r.error.issues[0]!;
+  const motivo = i.input === undefined ? 'ausente' : i.code === 'invalid_format' ? 'formato inválido' : 'valor inválido';
+  return { ok: false, erro: `campo "${i.path.join('.') || '(registro)'}": ${motivo}` };
+}
 
 const esquemaBackup: z.ZodType<Backup> = z.object({
   formato: z.literal(FORMATO_BACKUP),

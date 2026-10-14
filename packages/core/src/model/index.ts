@@ -152,15 +152,30 @@ export interface Preferencias extends Registro {
   convitePlanejar: boolean;
   /** Semana (data local do 1º dia) em que o convite já foi dispensado ou aceito. */
   semanaConviteTratada: ISODate | null;
+  /** Quais lembretes chegam como notificação (enviados pelo servidor). */
+  notificacoes: PreferenciasNotificacao;
 }
 
 export const ID_PREFERENCIAS = 'preferencias';
 
 /** Valores usados quando ainda não há preferências salvas (ou faltam campos de versões antigas). */
-export const PREFERENCIAS_PADRAO: Pick<Preferencias, 'inicioSemana' | 'convitePlanejar' | 'semanaConviteTratada'> = {
+export interface PreferenciasNotificacao {
+  /** Resumo do dia (o que pede atenção e compromissos de hoje). */
+  resumo: boolean;
+  /** Horário do resumo, "HH:MM"; lembretes de contato também só saem a partir dele. */
+  horaResumo: string;
+  /** Aviso antes de compromissos fixos. */
+  eventos: boolean;
+  minutosAntes: number;
+  /** Aviso quando passa da frequência de contato com alguém (uma vez por vez). */
+  contatos: boolean;
+}
+
+export const PREFERENCIAS_PADRAO: Pick<Preferencias, 'inicioSemana' | 'convitePlanejar' | 'semanaConviteTratada' | 'notificacoes'> = {
   inicioSemana: 1,
   convitePlanejar: true,
   semanaConviteTratada: null,
+  notificacoes: { resumo: true, horaResumo: '08:00', eventos: true, minutosAntes: 15, contatos: true },
 };
 
 /** Id determinístico: um adiamento por alvo, o que simplifica o upsert e a sincronização. */

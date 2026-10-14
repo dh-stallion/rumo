@@ -22,3 +22,5 @@ export * from './financas/dinheiro';
 export * from './financas/metas';
 export * from './rules/afazeres';
 export * from './rules/projetos';
+export * from './sync/sync';
+export * from './rules/lembretes';

@@ -68,6 +68,17 @@ export class RumoDB extends Dexie {
             s.acao ??= null;
           }),
       );
+    // v6: preferências de notificação (lembretes enviados pelo servidor).
+    this.version(6)
+      .stores({})
+      .upgrade((tx) =>
+        tx
+          .table<Preferencias>('preferencias')
+          .toCollection()
+          .modify((p) => {
+            p.notificacoes ??= PREFERENCIAS_PADRAO.notificacoes;
+          }),
+      );
   }
 }
 

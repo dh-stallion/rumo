@@ -22,7 +22,7 @@ async function popular(db: RumoDB) {
   await db.projetos.add({ ...base('nas'), nome: 'NAS', descricao: '', cor: '#0ea5e9', arquivado: false, marcos: [], acoes: [{ id: 'ac1', titulo: 'Pesquisar HDs', duracaoMin: 60, concluida: false }], itens: [{ id: 'i1', nome: 'HD', precoCentavos: 110_000, comprado: false }] });
   await db.metas.add({ ...base('meta1'), nome: 'NAS', valorAlvoCentavos: null, prazo: '2027-03-31', saldoInicialCentavos: 0, aportes: [{ id: 'ap1', data: '2026-10-05', valorCentavos: 20_000, nota: '' }], projetoId: 'nas' });
   await db.sessoes.add({ ...base('s3'), atividadeId: null, acao: { projetoId: 'nas', acaoId: 'ac1' }, inicio: t('2026-10-15T13:00Z'), fim: t('2026-10-15T14:00Z'), origem: 'planejada' });
-  await db.preferencias.add({ ...base(ID_PREFERENCIAS), inicioSemana: 0, convitePlanejar: false, semanaConviteTratada: '2026-10-12' });
+  await db.preferencias.add({ ...base(ID_PREFERENCIAS), inicioSemana: 0, convitePlanejar: false, semanaConviteTratada: '2026-10-12', notificacoes: { resumo: true, horaResumo: '07:30', eventos: true, minutosAntes: 10, contatos: false } });
 }
 
 let db: RumoDB;
