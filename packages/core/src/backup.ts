@@ -85,6 +85,10 @@ const evento: z.ZodType<Evento> = z.object({
   fixo: z.boolean(),
   pessoaId: z.string().nullable(),
   rrule: z.string().nullable(),
+  // Campos posteriores à versão 1 do formato: backups antigos recebem o padrão.
+  exdatas: z.array(instante).default([]),
+  serieId: z.string().nullable().default(null),
+  ocorrenciaOriginal: instante.nullable().default(null),
 });
 
 const adiamento: z.ZodType<Adiamento> = z.object({

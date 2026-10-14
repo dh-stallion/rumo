@@ -58,7 +58,23 @@ export interface Evento extends Registro {
   pessoaId: string | null;
   /** Regra de recorrência RFC 5545 (ex.: "FREQ=WEEKLY;BYDAY=MO,WE"); null = evento único. */
   rrule: string | null;
+  /** Inícios de ocorrências puladas da série (EXDATE). */
+  exdatas: ISODateTime[];
+  /**
+   * Ocorrência editada isoladamente ("só este"): id da série e início original da
+   * ocorrência que este evento substitui (RECURRENCE-ID no iCalendar).
+   */
+  serieId: string | null;
+  ocorrenciaOriginal: ISODateTime | null;
 }
+
+/** Campos de recorrência de um evento único, para criação. */
+export const semRecorrencia = (): Pick<Evento, 'rrule' | 'exdatas' | 'serieId' | 'ocorrenciaOriginal'> => ({
+  rrule: null,
+  exdatas: [],
+  serieId: null,
+  ocorrenciaOriginal: null,
+});
 
 export type AlvoAdiamento = 'atividade' | 'pessoa';
 

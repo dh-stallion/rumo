@@ -16,6 +16,9 @@ const evento = (id: string, inicio: string, p: Partial<Evento> = {}): Evento => 
   fixo: true,
   pessoaId: null,
   rrule: null,
+  exdatas: [],
+  serieId: null,
+  ocorrenciaOriginal: null,
   ...p,
 });
 

@@ -1,5 +1,6 @@
 import { ativo, type Adiamento, type Atividade, type Evento, type Pessoa, type Sessao } from '../model';
-import { CALENDARIO_PADRAO, diasEntre, fimDoDia, FUSO_PADRAO, inicioDoDia, type Calendario } from '../time';
+import { expandirEventos, type EventoNaAgenda } from '../calendario/eventos';
+import { CALENDARIO_PADRAO, diasEntre, FUSO_PADRAO, inicioDoDia, inicioDoDiaApos, type Calendario } from '../time';
 import { estaAdiado } from './adiamento';
 import { limiteEfetivo, ultimaSessao } from './atraso';
 import { contatoPendente, diasSemContato } from './contato';
@@ -76,10 +77,7 @@ export function itensDeAtencao(dados: DadosHoje, agora: Date, cal: Calendario = 
 }
 
 /** Eventos que tocam o dia de `agora`. Recorrência entra na etapa 3. */
-export function eventosDoDia(eventos: readonly Evento[], agora: Date, fuso = FUSO_PADRAO): Evento[] {
-  const ini = inicioDoDia(agora, fuso);
-  const fim = fimDoDia(agora, fuso);
-  return eventos
-    .filter((e) => ativo(e) && new Date(e.inicio) <= fim && new Date(e.fim) >= ini)
-    .sort((a, b) => a.inicio.localeCompare(b.inicio));
+/** Ocorrências de eventos (inclusive de séries) que tocam o dia de `agora`. */
+export function eventosDoDia(eventos: readonly Evento[], agora: Date, fuso = FUSO_PADRAO): EventoNaAgenda[] {
+  return expandirEventos(eventos, inicioDoDia(agora, fuso), inicioDoDiaApos(agora, 1, fuso), fuso);
 }

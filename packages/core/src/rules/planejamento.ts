@@ -1,3 +1,4 @@
+import { expandirEventos, type EventoNaAgenda } from '../calendario/eventos';
 import { ativo, type Evento, type Sessao } from '../model';
 import { FUSO_PADRAO, inicioDoDia, inicioDoDiaApos } from '../time';
 
@@ -16,9 +17,9 @@ export interface Intervalo {
 export const sobrepoe = (a: Intervalo, b: Intervalo) =>
   new Date(a.inicio) < new Date(b.fim) && new Date(b.inicio) < new Date(a.fim);
 
-/** Eventos fixos que se sobrepõem ao intervalo. */
-export function conflitosComFixos(intervalo: Intervalo, eventos: readonly Evento[]): Evento[] {
-  return eventos.filter((e) => ativo(e) && e.fixo && sobrepoe(intervalo, e));
+/** Eventos fixos (inclusive ocorrências de séries) que se sobrepõem ao intervalo. */
+export function conflitosComFixos(intervalo: Intervalo, eventos: readonly Evento[]): EventoNaAgenda[] {
+  return expandirEventos(eventos, new Date(intervalo.inicio), new Date(intervalo.fim)).filter((e) => e.fixo && sobrepoe(intervalo, e));
 }
 
 /** Arredonda minutos para o múltiplo de `passo` mais próximo. */

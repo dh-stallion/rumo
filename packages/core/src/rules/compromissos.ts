@@ -1,9 +1,10 @@
+import { chaveEvento, expandirEventos, type EventoNaAgenda } from '../calendario/eventos';
 import { ativo, type Atividade, type Evento, type ISODate, type Sessao } from '../model';
 import { combinarDataHora, formatar, FUSO_PADRAO, inicioDoDia, inicioDoDiaApos, paraDataLocal } from '../time';
 
 /** Algo marcado na agenda: um evento ou uma sessão planejada de uma atividade. */
 export type Compromisso =
-  | { tipo: 'evento'; id: string; inicio: string; fim: string; titulo: string; pessoaId: string | null; fixo: boolean; evento: Evento }
+  | { tipo: 'evento'; id: string; inicio: string; fim: string; titulo: string; pessoaId: string | null; fixo: boolean; evento: EventoNaAgenda }
   | { tipo: 'sessao'; id: string; inicio: string; fim: string; titulo: string; pessoaId: null; fixo: false; sessao: Sessao; atividade: Atividade };
 
 export interface DiaDeCompromissos {
@@ -20,9 +21,9 @@ export interface DadosCompromissos {
 const ordem = (a: Compromisso, b: Compromisso) =>
   a.inicio.localeCompare(b.inicio) || a.titulo.localeCompare(b.titulo, 'pt-BR') || a.id.localeCompare(b.id);
 
-export const compromissoDeEvento = (e: Evento): Compromisso => ({
+export const compromissoDeEvento = (e: EventoNaAgenda): Compromisso => ({
   tipo: 'evento',
-  id: e.id,
+  id: chaveEvento(e),
   inicio: e.inicio,
   fim: e.fim,
   titulo: e.titulo,
@@ -39,8 +40,8 @@ export function compromissosEntre(dados: DadosCompromissos, inicio: Date, fim: D
   const atividades = new Map(dados.atividades.filter(ativo).map((a) => [a.id, a]));
 
   const itens: Compromisso[] = [];
-  for (const e of dados.eventos) {
-    if (ativo(e) && dentro(e.inicio)) itens.push(compromissoDeEvento(e));
+  for (const e of expandirEventos(dados.eventos, inicio, fim)) {
+    if (dentro(e.inicio)) itens.push(compromissoDeEvento(e));
   }
   for (const s of dados.sessoes) {
     const atividade = atividades.get(s.atividadeId);
@@ -57,7 +58,7 @@ export function compromissosEntre(dados: DadosCompromissos, inicio: Date, fim: D
 export function compromissosDeHoje(dados: DadosCompromissos, agora: Date, fuso = FUSO_PADRAO): Compromisso[] {
   const ini = inicioDoDia(agora, fuso);
   const fim = inicioDoDiaApos(agora, 1, fuso);
-  const eventos = dados.eventos.filter((e) => ativo(e) && new Date(e.inicio) < fim && new Date(e.fim) > ini).map(compromissoDeEvento);
+  const eventos = expandirEventos(dados.eventos, ini, fim, fuso).map(compromissoDeEvento);
   const sessoes = compromissosEntre({ ...dados, eventos: [] }, ini, fim);
   return [...eventos, ...sessoes].sort(ordem);
 }

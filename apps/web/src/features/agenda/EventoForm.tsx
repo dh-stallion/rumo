@@ -1,4 +1,4 @@
-import { combinarDataHora, paraDataLocal, paraHoraLocal, type Evento, type Pessoa } from '@rumo/core';
+import { combinarDataHora, paraDataLocal, paraHoraLocal, semRecorrencia, type Evento, type Pessoa } from '@rumo/core';
 import { Trash2 } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Botao } from '../../components/ui/Botao';
@@ -54,7 +54,9 @@ export function EventoForm({
       fim: fimData!.toISOString(),
       fixo,
       pessoaId: pessoaId || null,
-      rrule: evento?.rrule ?? null,
+      ...(evento
+        ? { rrule: evento.rrule, exdatas: evento.exdatas, serieId: evento.serieId, ocorrenciaOriginal: evento.ocorrenciaOriginal }
+        : semRecorrencia()),
     };
     if (evento) await atualizar(db.eventos, evento.id, dados);
     else await criar(db.eventos, dados);

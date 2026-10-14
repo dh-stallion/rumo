@@ -17,7 +17,7 @@ async function popular(db: RumoDB) {
     { ...base('s2'), atividadeId: 'a1', inicio: t('2026-10-16T22:00Z'), fim: t('2026-10-16T22:30Z'), origem: 'planejada' },
   ]);
   await db.pessoas.add({ ...base('p1'), nome: 'Ana', frequenciaDias: 7, ultimoContato: t('2026-10-01T20:00Z'), notas: 'aniversário 3/11 — "café"', pausada: false });
-  await db.eventos.add({ ...base('e1'), titulo: 'Dentista', inicio: t('2026-10-14T18:00Z'), fim: t('2026-10-14T19:00Z'), fixo: true, pessoaId: 'p1', rrule: 'FREQ=WEEKLY;BYDAY=TU' });
+  await db.eventos.add({ ...base('e1'), titulo: 'Dentista', inicio: t('2026-10-14T18:00Z'), fim: t('2026-10-14T19:00Z'), fixo: true, pessoaId: 'p1', rrule: 'FREQ=WEEKLY;BYDAY=TU', exdatas: [t('2026-10-20T21:00Z')], serieId: null, ocorrenciaOriginal: null });
   await db.adiamentos.add({ ...base('atividade:a1'), alvoTipo: 'atividade', alvoId: 'a1', ate: t('2026-10-14T03:00Z') });
   await db.preferencias.add({ ...base(ID_PREFERENCIAS), inicioSemana: 0, convitePlanejar: false, semanaConviteTratada: '2026-10-12' });
 }

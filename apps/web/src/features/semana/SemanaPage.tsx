@@ -1,7 +1,9 @@
 import { DndContext, DragOverlay, pointerWithin } from '@dnd-kit/core';
 import {
   ativo,
+  chaveEvento,
   conflitosComFixos,
+  expandirEventos,
   diaCurto,
   duracaoMin,
   formatar,
@@ -10,6 +12,7 @@ import {
   paraDataLocal,
   type Atividade,
   type Evento,
+  type EventoNaAgenda,
   type Sessao,
 } from '@rumo/core';
 import { ChevronLeft, ChevronRight, Maximize2, Minimize2, Plus } from 'lucide-react';
@@ -233,8 +236,8 @@ function ConteudoDia({
   onAbrirSessao: (s: Sessao) => void;
 }) {
   // Eventos e sessões dividem as faixas juntos: um conflito aparece lado a lado, não sobreposto.
-  const blocos = blocosDoDia<Evento | Sessao>(
-    [...eventos.filter(ativo), ...sessoes.filter((s) => ativo(s) && atividades.get(s.atividadeId))],
+  const blocos = blocosDoDia<EventoNaAgenda | Sessao>(
+    [...expandirEventos(eventos, dia, inicioDoDiaApos(dia, 1)), ...sessoes.filter((s) => ativo(s) && atividades.get(s.atividadeId))],
     dia,
   );
   const idArrastado = emArraste && emArraste.tipo !== 'banco' ? emArraste.sessao.id : null;
@@ -242,7 +245,7 @@ function ConteudoDia({
     <FundoDia dia={dia} agora={agora}>
       {blocos.map(({ item, ...b }) =>
         'titulo' in item ? (
-          <BlocoEvento key={item.id} bloco={{ ...b, item }} onAbrir={onAbrirEvento} />
+          <BlocoEvento key={chaveEvento(item)} bloco={{ ...b, item }} onAbrir={onAbrirEvento} />
         ) : (
           <BlocoSessaoArrastavel
             key={item.id}

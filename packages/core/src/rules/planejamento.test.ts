@@ -25,6 +25,9 @@ const evento = (id: string, inicio: string, fim: string, fixo = true): Evento =>
   fixo,
   pessoaId: null,
   rrule: null,
+  exdatas: [],
+  serieId: null,
+  ocorrenciaOriginal: null,
 });
 
 describe('conflitosComFixos', () => {

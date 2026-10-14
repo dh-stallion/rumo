@@ -147,6 +147,9 @@ describe('eventosDoDia', () => {
     fixo: true,
     pessoaId: null,
     rrule: null,
+    exdatas: [],
+    serieId: null,
+    ocorrenciaOriginal: null,
   });
 
   it('inclui eventos que tocam o dia em São Paulo, em ordem', () => {

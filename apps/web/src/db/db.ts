@@ -1,4 +1,12 @@
-import { PREFERENCIAS_PADRAO, type Adiamento, type Atividade, type Evento, type Pessoa, type Preferencias, type Sessao } from '@rumo/core';
+import {
+  PREFERENCIAS_PADRAO,
+  type Adiamento,
+  type Atividade,
+  type Evento,
+  type Pessoa,
+  type Preferencias,
+  type Sessao,
+} from '@rumo/core';
 import Dexie, { type Table } from 'dexie';
 
 export class RumoDB extends Dexie {
@@ -30,6 +38,19 @@ export class RumoDB extends Dexie {
           .modify((p) => {
             p.convitePlanejar ??= PREFERENCIAS_PADRAO.convitePlanejar;
             p.semanaConviteTratada ??= PREFERENCIAS_PADRAO.semanaConviteTratada;
+          }),
+      );
+    // v4: recorrência com exceções (EXDATE e ocorrências editadas).
+    this.version(4)
+      .stores({ eventos: 'id, inicio, serieId, atualizadoEm' })
+      .upgrade((tx) =>
+        tx
+          .table<Evento>('eventos')
+          .toCollection()
+          .modify((e) => {
+            e.exdatas ??= [];
+            e.serieId ??= null;
+            e.ocorrenciaOriginal ??= null;
           }),
       );
   }
