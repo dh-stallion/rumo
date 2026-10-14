@@ -7,11 +7,13 @@ export const TERCA = new Date('2026-10-13T12:00:00-03:00');
  * Cada teste começa num navegador limpo (IndexedDB vazio), com o relógio fixo
  * e falhando se houver erro no console.
  */
-export const test = base.extend<{ agora: Date }>({
+export const test = base.extend<{ agora: Date; errosPermitidos: RegExp | null }>({
   agora: [TERCA, { option: true }],
-  page: async ({ page, agora }, use) => {
+  /** Erros de console esperados num teste (ex.: falha de rede proposital). */
+  errosPermitidos: [null, { option: true }],
+  page: async ({ page, agora, errosPermitidos }, use) => {
     const erros: string[] = [];
-    page.on('console', (m) => m.type() === 'error' && erros.push(m.text()));
+    page.on('console', (m) => m.type() === 'error' && !errosPermitidos?.test(m.text()) && erros.push(m.text()));
     page.on('pageerror', (e) => erros.push(String(e)));
     await page.clock.setFixedTime(agora);
     await use(page);
