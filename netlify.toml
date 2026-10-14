@@ -1,0 +1,41 @@
+# Deploy do PWA no Netlify (monorepo com npm workspaces).
+# O build roda na raiz e gera o site em apps/web/dist.
+
+[build]
+  command = "npm run build"
+  publish = "apps/web/dist"
+
+[build.environment]
+  # Vite 8 e Vitest 5 pedem Node 22.12+.
+  NODE_VERSION = "22"
+
+# SPA: rotas como /semana e /planos/projeto/:id caem no index.html
+# (arquivos que existem, como /assets/*, continuam sendo servidos direto).
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# O service worker, o script que o registra e o manifest nunca ficam em cache,
+# para o app instalado no iPhone enxergar versões novas.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/registerSW.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+    Cache-Control = "no-cache"
+
+# Arquivos com hash no nome podem ficar em cache para sempre.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
