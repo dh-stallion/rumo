@@ -26,6 +26,7 @@ import { useLista } from '../../db/repo';
 import { EventoForm } from '../agenda/EventoForm';
 import { SessaoSheet } from '../semana/SessaoSheet';
 import { ListaCompromissos, ProximosCompromissos } from './Compromissos';
+import { ConviteSemana } from './ConviteSemana';
 
 type Alvo = { tipo: AlvoAdiamento; id: string; nome: string };
 
@@ -57,6 +58,8 @@ export function HojePage() {
 
   return (
     <Pagina titulo="Hoje" subtitulo={subtitulo}>
+      <ConviteSemana agora={agora} />
+
       {deHoje.length > 0 && (
         <Secao titulo="Agenda">
           <ListaCompromissos itens={deHoje} pessoas={pessoas} onAbrir={abrir} />

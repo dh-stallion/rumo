@@ -1,21 +1,42 @@
-import { CALENDARIO_PADRAO, ID_PREFERENCIAS, type Calendario, type DiaSemana } from '@rumo/core';
+import {
+  CALENDARIO_PADRAO,
+  ID_PREFERENCIAS,
+  PREFERENCIAS_PADRAO,
+  type Calendario,
+  type DiaSemana,
+  type Preferencias,
+} from '@rumo/core';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from './db';
 
-/** Calendário do usuário (fuso + início da semana); usa o padrão enquanto carrega. */
-export function useCalendario(): Calendario {
-  const prefs = useLiveQuery(() => db.preferencias.get(ID_PREFERENCIAS));
-  return prefs ? { ...CALENDARIO_PADRAO, inicioSemana: prefs.inicioSemana } : CALENDARIO_PADRAO;
+type Ajustaveis = Pick<Preferencias, keyof typeof PREFERENCIAS_PADRAO>;
+
+/** Preferências salvas, com os padrões preenchidos; os padrões enquanto carrega. */
+export function usePreferencias(): Ajustaveis & { carregado: boolean } {
+  const prefs = useLiveQuery(() => db.preferencias.get(ID_PREFERENCIAS).then((p) => p ?? null));
+  return { ...PREFERENCIAS_PADRAO, ...(prefs ?? {}), carregado: prefs !== undefined };
 }
 
-export async function definirInicioSemana(inicioSemana: DiaSemana) {
+/** Calendário do usuário (fuso + início da semana). */
+export function useCalendario(): Calendario {
+  const { inicioSemana } = usePreferencias();
+  return { ...CALENDARIO_PADRAO, inicioSemana };
+}
+
+export async function atualizarPreferencias(mudancas: Partial<Ajustaveis>) {
   const t = new Date().toISOString();
-  const atual = await db.preferencias.get(ID_PREFERENCIAS);
-  await db.preferencias.put({
-    id: ID_PREFERENCIAS,
-    inicioSemana,
-    criadoEm: atual?.criadoEm ?? t,
-    atualizadoEm: t,
-    excluidoEm: null,
+  await db.transaction('rw', db.preferencias, async () => {
+    const atual = await db.preferencias.get(ID_PREFERENCIAS);
+    await db.preferencias.put({
+      ...PREFERENCIAS_PADRAO,
+      ...atual,
+      ...mudancas,
+      id: ID_PREFERENCIAS,
+      criadoEm: atual?.criadoEm ?? t,
+      atualizadoEm: t,
+      excluidoEm: null,
+    });
   });
 }
+
+export const definirInicioSemana = (inicioSemana: DiaSemana) => atualizarPreferencias({ inicioSemana });

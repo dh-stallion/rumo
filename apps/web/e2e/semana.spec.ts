@@ -35,6 +35,8 @@ test.describe('grade da semana', () => {
   test('respeita o início de semana configurado', async ({ page }) => {
     await irPara(page, 'Ajustes');
     await page.getByRole('radio', { name: 'Domingo' }).tap();
+    // O estado marcado vem do IndexedDB: espera a gravação antes de seguir.
+    await expect(page.getByRole('radio', { name: 'Domingo' })).toHaveAttribute('aria-checked', 'true');
     await irPara(page, 'Semana');
     await expect(page.getByText('11 – 17 de outubro')).toBeVisible();
     await expect(page.locator('[data-dia]').first()).toHaveAttribute('data-dia', '2026-10-11');

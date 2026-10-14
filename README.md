@@ -70,6 +70,12 @@ Observações:
   terminar agora. "Feito" em Hoje e "Fiz hoje" em Atividades convertem a planejada do dia, se houver.
 - Tudo tem **Desfazer** no aviso que aparece no topo.
 
+**Planejar a semana**: o botão **Ver semana toda** alterna para 7 colunas em tela cheia, com o banco
+de afazeres, arraste por toque longo e o fluxo sem arrastar. No começo de cada semana (conforme o
+início de semana dos Ajustes, virando à meia-noite de São Paulo), **Hoje** mostra um card discreto
+"Semana nova: planejar?". Aceitar ou dispensar esconde o card até a semana seguinte. Dá para desligar
+em **Ajustes → Calendário**.
+
 As sessões planejadas de hoje aparecem no topo de **Hoje**, e as dos próximos 7 dias em
 **Próximos compromissos**.
 

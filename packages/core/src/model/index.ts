@@ -75,9 +75,20 @@ export type DiaSemana = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 /** Preferências que afetam as regras; registro único, sincronizável como os demais. */
 export interface Preferencias extends Registro {
   inicioSemana: DiaSemana;
+  /** Mostrar em "Hoje" o convite "Semana nova: planejar?". */
+  convitePlanejar: boolean;
+  /** Semana (data local do 1º dia) em que o convite já foi dispensado ou aceito. */
+  semanaConviteTratada: ISODate | null;
 }
 
 export const ID_PREFERENCIAS = 'preferencias';
+
+/** Valores usados quando ainda não há preferências salvas (ou faltam campos de versões antigas). */
+export const PREFERENCIAS_PADRAO: Pick<Preferencias, 'inicioSemana' | 'convitePlanejar' | 'semanaConviteTratada'> = {
+  inicioSemana: 1,
+  convitePlanejar: true,
+  semanaConviteTratada: null,
+};
 
 /** Id determinístico: um adiamento por alvo, o que simplifica o upsert e a sincronização. */
 export const idAdiamento = (alvoTipo: AlvoAdiamento, alvoId: string) => `${alvoTipo}:${alvoId}`;

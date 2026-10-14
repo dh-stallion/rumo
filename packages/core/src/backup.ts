@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   CATEGORIAS,
+  PREFERENCIAS_PADRAO,
   type Adiamento,
   type Atividade,
   type Evento,
@@ -96,6 +97,9 @@ const adiamento: z.ZodType<Adiamento> = z.object({
 const preferencias: z.ZodType<Preferencias> = z.object({
   ...registro,
   inicioSemana: z.literal([0, 1, 2, 3, 4, 5, 6]),
+  // Campos posteriores à versão 1 do formato: backups antigos recebem o padrão.
+  convitePlanejar: z.boolean().default(PREFERENCIAS_PADRAO.convitePlanejar),
+  semanaConviteTratada: z.iso.date().nullable().default(PREFERENCIAS_PADRAO.semanaConviteTratada),
 });
 
 const esquemaBackup: z.ZodType<Backup> = z.object({

@@ -1,8 +1,8 @@
 import type { DiaSemana } from '@rumo/core';
 import { definirTema, useTema, type Tema } from '../../app/tema';
-import { Segmentado } from '../../components/ui/Campos';
+import { Interruptor, Segmentado } from '../../components/ui/Campos';
 import { Pagina, Secao } from '../../components/ui/Pagina';
-import { definirInicioSemana, useCalendario } from '../../db/preferencias';
+import { atualizarPreferencias, definirInicioSemana, useCalendario, usePreferencias } from '../../db/preferencias';
 import { DadosSecao } from './DadosSecao';
 
 const opcoesInicioSemana = [
@@ -20,6 +20,7 @@ const opcoesTema: { valor: Tema; rotulo: string }[] = [
 export function AjustesPage() {
   const tema = useTema();
   const cal = useCalendario();
+  const prefs = usePreferencias();
 
   return (
     <Pagina titulo="Ajustes">
@@ -36,6 +37,14 @@ export function AjustesPage() {
           onChange={(v) => definirInicioSemana(Number(v) as DiaSemana)}
         />
         <p className="mt-2 px-1 text-xs text-neutral-500">Vale para as metas semanais e para o planejador.</p>
+        <div className="mt-4 px-1">
+          <Interruptor
+            rotulo="Convite para planejar a semana"
+            dica="Um card discreto em Hoje, uma vez por semana, com atalho para a visão da semana toda."
+            marcado={prefs.convitePlanejar}
+            onChange={(v) => atualizarPreferencias({ convitePlanejar: v })}
+          />
+        </div>
       </Secao>
 
       <DadosSecao />

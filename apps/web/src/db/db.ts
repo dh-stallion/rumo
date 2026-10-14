@@ -1,4 +1,4 @@
-import type { Adiamento, Atividade, Evento, Pessoa, Preferencias, Sessao } from '@rumo/core';
+import { PREFERENCIAS_PADRAO, type Adiamento, type Atividade, type Evento, type Pessoa, type Preferencias, type Sessao } from '@rumo/core';
 import Dexie, { type Table } from 'dexie';
 
 export class RumoDB extends Dexie {
@@ -20,6 +20,18 @@ export class RumoDB extends Dexie {
       adiamentos: 'id, atualizadoEm',
     });
     this.version(2).stores({ preferencias: 'id, atualizadoEm' });
+    // v3: convite semanal; preenche os campos novos nas preferências já salvas.
+    this.version(3)
+      .stores({})
+      .upgrade((tx) =>
+        tx
+          .table<Preferencias>('preferencias')
+          .toCollection()
+          .modify((p) => {
+            p.convitePlanejar ??= PREFERENCIAS_PADRAO.convitePlanejar;
+            p.semanaConviteTratada ??= PREFERENCIAS_PADRAO.semanaConviteTratada;
+          }),
+      );
   }
 }
 

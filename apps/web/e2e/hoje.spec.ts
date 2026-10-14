@@ -91,6 +91,8 @@ test('início da semana configurável e salvo', async ({ page }) => {
   const segunda = page.getByRole('radio', { name: 'Segunda' });
   await expect(segunda).toHaveAttribute('aria-checked', 'true');
   await page.getByRole('radio', { name: 'Domingo' }).tap();
+  // O estado marcado vem do IndexedDB: espera a gravação antes de seguir.
+  await expect(page.getByRole('radio', { name: 'Domingo' })).toHaveAttribute('aria-checked', 'true');
   await page.reload();
   await expect(page.getByRole('radio', { name: 'Domingo' })).toHaveAttribute('aria-checked', 'true');
 

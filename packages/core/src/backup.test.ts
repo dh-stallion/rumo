@@ -22,7 +22,15 @@ const tabelas = (): TabelasBackup => ({
   ],
   adiamentos: [adiamento({ alvoId: 'a1', ate: '2026-10-14T03:00:00.000Z' })],
   preferencias: [
-    { id: 'preferencias', criadoEm: '2026-10-01T15:00:00.000Z', atualizadoEm: '2026-10-01T15:00:00.000Z', excluidoEm: null, inicioSemana: 0 },
+    {
+      id: 'preferencias',
+      criadoEm: '2026-10-01T15:00:00.000Z',
+      atualizadoEm: '2026-10-01T15:00:00.000Z',
+      excluidoEm: null,
+      inicioSemana: 0,
+      convitePlanejar: false,
+      semanaConviteTratada: '2026-10-12',
+    },
   ],
 });
 
@@ -77,6 +85,14 @@ describe('validarBackup', () => {
     delete b.tabelas.eventos;
     const r = validarBackup(b);
     expect(!r.ok && r.erros).toEqual(['pessoa nº 1, campo "ultimoContato": formato inválido', 'tabela "eventos": ausente']);
+  });
+
+  it('backup de antes do convite semanal recebe os valores padrão', () => {
+    const antigo = viaArquivo(criarBackup(tabelas())) as { tabelas: { preferencias: Record<string, unknown>[] } };
+    delete antigo.tabelas.preferencias[0]!.convitePlanejar;
+    delete antigo.tabelas.preferencias[0]!.semanaConviteTratada;
+    const r = validarBackup(antigo);
+    expect(r.ok && r.backup.tabelas.preferencias[0]).toMatchObject({ convitePlanejar: true, semanaConviteTratada: null });
   });
 
   it('recusa ids repetidos', () => {

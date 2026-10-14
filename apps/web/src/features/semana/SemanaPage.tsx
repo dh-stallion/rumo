@@ -12,7 +12,8 @@ import {
   type Evento,
   type Sessao,
 } from '@rumo/core';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Maximize2, Minimize2, Plus } from 'lucide-react';
+import { useSearchParams } from 'react-router';
 import { useMemo, useRef, useState } from 'react';
 import { useAgora } from '../../app/useAgora';
 import { Botao } from '../../components/ui/Botao';
@@ -49,6 +50,9 @@ export function SemanaPage() {
   const eventos = useLista(db.eventos);
   const pessoas = useLista(db.pessoas);
   const [deslocamento, setDeslocamento] = useState(0);
+  // Visão de 7 colunas em tela cheia ("Planejar a semana"); na URL para Hoje poder abrir direto.
+  const [params, setParams] = useSearchParams();
+  const telaCheia = params.get('planejar') === '1';
   const [editandoEvento, setEditandoEvento] = useState<Evento | 'novo' | null>(null);
   const [agendando, setAgendando] = useState<Atividade | null>(null);
   const [sessaoAberta, setSessaoAberta] = useState<string | null>(null);
@@ -83,12 +87,20 @@ export function SemanaPage() {
   const arraste = useArrasteNaGrade({ grade, eventos: eventos ?? [], onSoltar: soltar });
 
   return (
-    <div className="flex h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom))] flex-col pt-[env(safe-area-inset-top)]">
-      <header className="px-4 pt-3 pb-2">
+    <div
+      className={
+        telaCheia
+          ? 'fixed inset-0 z-[35] flex flex-col bg-neutral-50 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] dark:bg-neutral-950'
+          : 'flex h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom))] flex-col pt-[env(safe-area-inset-top)]'
+      }
+    >
+      <header className={telaCheia ? 'px-3 pt-2 pb-1' : 'px-4 pt-3 pb-2'}>
         <div className="flex items-end justify-between gap-3">
           <div>
             <p className="text-sm font-medium text-neutral-500">{rotuloSemana(inicio)}</p>
-            <h1 className="text-3xl font-bold tracking-tight">Semana</h1>
+            <h1 className={`font-bold tracking-tight ${telaCheia ? 'text-2xl' : 'text-3xl'}`}>
+              {telaCheia ? 'Planejar a semana' : 'Semana'}
+            </h1>
           </div>
           <Botao variante="primario" className="px-3" aria-label="Novo evento" onClick={() => setEditandoEvento('novo')}>
             <Plus size={20} /> Evento
@@ -103,6 +115,15 @@ export function SemanaPage() {
           </Botao>
           <Botao variante="fantasma" className="px-2" aria-label="Semana seguinte" onClick={() => setDeslocamento((d) => d + 1)}>
             <ChevronRight size={22} />
+          </Botao>
+          <Botao
+            variante="secundario"
+            className="ml-auto px-3"
+            aria-pressed={telaCheia}
+            onClick={() => setParams(telaCheia ? {} : { planejar: '1' }, { replace: true })}
+          >
+            {telaCheia ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+            {telaCheia ? 'Ver 3 dias' : 'Ver semana toda'}
           </Botao>
         </nav>
       </header>
@@ -122,7 +143,7 @@ export function SemanaPage() {
           <GradeSemanal
             dias={dias}
             agora={agora}
-            modo="tres"
+            modo={telaCheia ? 'semana' : 'tres'}
             refRolagem={grade}
             renderDia={(dia) => (
               <ConteudoDia

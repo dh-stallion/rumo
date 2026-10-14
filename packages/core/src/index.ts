@@ -9,3 +9,4 @@ export * from './rules/hoje';
 export * from './rules/compromissos';
 export * from './backup';
 export * from './rules/planejamento';
+export * from './rules/convite';

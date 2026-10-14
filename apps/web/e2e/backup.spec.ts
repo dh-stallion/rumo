@@ -54,6 +54,8 @@ test('exportar, apagar tudo, importar: os dados voltam idênticos', async ({ pag
   await novoEvento(page, { titulo: 'Dentista', data: '2026-10-14', inicio: '15:00', fim: '16:00', pessoa: 'Ana' });
   await irPara(page, 'Ajustes');
   await page.getByRole('radio', { name: 'Domingo' }).tap();
+  // O estado marcado vem do IndexedDB: espera a gravação antes de seguir.
+  await expect(page.getByRole('radio', { name: 'Domingo' })).toHaveAttribute('aria-checked', 'true');
 
   const original = await exportar(page);
   expect(JSON.parse(original)).toMatchObject({ formato: 'rumo-backup', versao: 1 });
