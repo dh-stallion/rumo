@@ -52,7 +52,7 @@ export function MetaForm({ meta, projetoInicial, onFechar }: { meta?: MetaFinanc
     if (!meta) return;
     const desfazer = await excluir(db.metas, meta.id);
     onFechar();
-    navegar('/planos?aba=metas');
+    navegar('/planos');
     toast({ texto: `${meta.nome} excluída`, acao: { rotulo: 'Desfazer', fn: desfazer } });
   }
 

@@ -22,8 +22,9 @@ export function MetasLista() {
   const lista = metas.filter(ativo).sort((a, b) => a.prazo.localeCompare(b.prazo));
 
   return (
-    <>
-      <div className="mb-3 flex justify-end">
+    <section aria-label="Metas">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="text-xl font-bold">Metas</h2>
         <Botao variante="primario" className="px-3" aria-label="Nova meta" onClick={() => setCriando(true)}>
           <Plus size={20} /> Nova meta
         </Botao>
@@ -43,7 +44,7 @@ export function MetasLista() {
       <Sheet aberto={criando} onFechar={() => setCriando(false)} titulo="Nova meta">
         {criando && <MetaForm onFechar={() => setCriando(false)} />}
       </Sheet>
-    </>
+    </section>
   );
 }
 

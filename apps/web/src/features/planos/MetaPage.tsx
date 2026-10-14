@@ -15,7 +15,7 @@ import { registrarAporte, removerAporte } from '../../db/metas';
 import { MetaForm } from './MetaForm';
 import { ProgressoMeta } from './ProgressoMeta';
 
-const VOLTAR = { para: '/planos?aba=metas', rotulo: 'Metas' };
+const VOLTAR = { para: '/planos', rotulo: 'Planos' };
 
 export function MetaPage() {
   const { id } = useParams();

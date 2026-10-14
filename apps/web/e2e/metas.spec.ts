@@ -18,7 +18,6 @@ test.beforeEach(async ({ page }) => {
 
 test('meta em reais para comprar euros: aporte mensal e semanal, aportes e retiradas', async ({ page }) => {
   await irPara(page, 'Planos');
-  await page.getByRole('radio', { name: 'Metas' }).tap();
   await page.getByRole('button', { name: 'Nova meta' }).tap();
   const f = page.getByRole('dialog', { name: 'Nova meta' });
   await f.getByRole('textbox', { name: 'Nome' }).fill('Euros para a viagem');
@@ -43,7 +42,7 @@ test('meta em reais para comprar euros: aporte mensal e semanal, aportes e retir
   await expect(page.locator('[data-progresso-meta]')).toContainText('R$ 3.500');
 
   // Na lista de metas.
-  await page.getByRole('link', { name: 'Metas' }).first().tap();
+  await page.getByRole('link', { name: 'Planos' }).first().tap();
   await expect(page.getByRole('link', { name: 'Euros para a viagem' })).toContainText('Guarde R$ 4.833,34/mês');
 });
 
@@ -87,4 +86,11 @@ test('meta do NAS pela soma dos itens do projeto acompanha os preços', async ({
   await item.getByRole('button', { name: 'Salvar' }).tap();
   const cartao = page.getByRole('link', { name: 'NAS', exact: true });
   await expect(cartao).toContainText('de R$ 4.000');
+});
+
+test('Planos mostra projetos e metas na mesma página, sem seletor', async ({ page }) => {
+  await irPara(page, 'Planos');
+  await expect(page.getByRole('radio')).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Projetos' }).getByRole('button', { name: 'Novo projeto' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Metas' }).getByRole('button', { name: 'Nova meta' })).toBeVisible();
 });

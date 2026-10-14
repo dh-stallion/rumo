@@ -129,7 +129,9 @@ As sessões planejadas de hoje aparecem no topo de **Hoje**, e as dos próximos 
 
 ## Planos: projetos e metas
 
-**Projetos** (Planos → Projetos) são planos de longo prazo com:
+A aba **Planos** mostra projetos e metas na mesma página.
+
+**Projetos** são planos de longo prazo com:
 
 - **Próximas ações**: cada uma tem uma duração e pode virar sessão na grade, pelo botão de agendar na
   página do projeto ou arrastando do **banco de afazeres** (grupo Projetos). Ações concluídas saem do banco.
@@ -138,7 +140,7 @@ As sessões planejadas de hoje aparecem no topo de **Hoje**, e as dos próximos 
 
 Arquivar um projeto tira o projeto da lista principal e as ações do banco.
 
-**Metas financeiras** (Planos → Metas) são sempre **em reais**. Para comprar euros, a meta é quanto você
+**Metas financeiras** são sempre **em reais**. Para comprar euros, a meta é quanto você
 pretende gastar em reais (anote a cotação no aporte, se quiser). Com o alvo, o prazo e o que já está
 guardado, o app calcula:
 

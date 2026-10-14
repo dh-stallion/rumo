@@ -3,7 +3,7 @@ import { ChevronRight, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { Botao } from '../../components/ui/Botao';
-import { classeCartao, Secao, Vazio } from '../../components/ui/Pagina';
+import { classeCartao, Vazio } from '../../components/ui/Pagina';
 import { Sheet } from '../../components/ui/Sheet';
 import { db } from '../../db/db';
 import { useLista } from '../../db/repo';
@@ -19,8 +19,9 @@ export function ProjetosLista() {
   const arquivados = projetos.filter((p) => ativo(p) && p.arquivado).sort(porNome);
 
   return (
-    <>
-      <div className="mb-3 flex justify-end">
+    <section className="mb-9" aria-label="Projetos">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="text-xl font-bold">Projetos</h2>
         <Botao variante="primario" className="px-3" aria-label="Novo projeto" onClick={() => setCriando(true)}>
           <Plus size={20} /> Novo projeto
         </Botao>
@@ -32,19 +33,20 @@ export function ProjetosLista() {
           <p className="mt-1 text-sm">Projetos de longo prazo com marcos, próximas ações e uma lista de compras.</p>
         </Vazio>
       ) : (
-        <ul className="mb-7 space-y-3">{ativos.map((p) => <CartaoProjeto key={p.id} projeto={p} />)}</ul>
+        <ul className="space-y-3">{ativos.map((p) => <CartaoProjeto key={p.id} projeto={p} />)}</ul>
       )}
 
       {arquivados.length > 0 && (
-        <Secao titulo="Arquivados">
+        <>
+          <h3 className="mt-5 mb-2 px-1 text-sm font-semibold tracking-wide text-neutral-500 uppercase">Arquivados</h3>
           <ul className="space-y-3">{arquivados.map((p) => <CartaoProjeto key={p.id} projeto={p} />)}</ul>
-        </Secao>
+        </>
       )}
 
       <Sheet aberto={criando} onFechar={() => setCriando(false)} titulo="Novo projeto">
         {criando && <ProjetoForm onFechar={() => setCriando(false)} />}
       </Sheet>
-    </>
+    </section>
   );
 }
 
