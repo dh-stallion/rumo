@@ -99,20 +99,34 @@ test('o service worker mostra a notificação recebida e usa a tag', async ({ pa
   await page.evaluate(() => navigator.serviceWorker.ready);
   const cdp = await page.context().newCDPSession(page);
   const registros: { registrationId: string; scopeURL: string }[] = [];
+  const ativados = new Set<string>();
   cdp.on('ServiceWorker.workerRegistrationUpdated', (e) => registros.push(...e.registrations));
+  cdp.on('ServiceWorker.workerVersionUpdated', (e) =>
+    e.versions.filter((v) => v.status === 'activated').forEach((v) => ativados.add(v.registrationId)),
+  );
   await cdp.send('ServiceWorker.enable');
-  await expect.poll(() => registros.length).toBeGreaterThan(0);
+  await expect.poll(() => registros.some((r) => r.scopeURL.startsWith('http://localhost:4173'))).toBe(true);
   const registro = registros.find((r) => r.scopeURL.startsWith('http://localhost:4173'))!;
+  await expect.poll(() => ativados.has(registro.registrationId)).toBe(true);
 
-  const entregar = (dados: object) =>
-    cdp.send('ServiceWorker.deliverPushMessage', { origin: 'http://localhost:4173', registrationId: registro.registrationId, data: JSON.stringify(dados) });
-  await entregar({ titulo: 'Seu dia', corpo: '2 coisas pedem atenção', url: '/', tag: 'resumo:2026-10-13' });
-  await entregar({ titulo: 'Seu dia', corpo: '3 coisas pedem atenção', url: '/', tag: 'resumo:2026-10-13' });
-  await entregar({ titulo: 'Dentista', corpo: 'Às 15:00 (em 15 minutos)', url: '/semana', tag: 'evento:x' });
+  const notificacoes = async () =>
+    (
+      await page.evaluate(async () =>
+        (await (await navigator.serviceWorker.ready).getNotifications()).map((n) => `${n.title} | ${n.body} | ${n.tag} | ${(n.data as { url: string }).url}`),
+      )
+    ).sort(); // a substituída vai para o fim da lista; a ordem não importa
+  // Cada entrega é conferida antes da próxima. Sob carga, o Edge às vezes descarta a mensagem
+  // simulada pelo CDP; como toda entrega tem tag, reenviar é inofensivo.
+  const entregar = async (dados: object, esperado: string[]) => {
+    await expect(async () => {
+      await cdp.send('ServiceWorker.deliverPushMessage', { origin: 'http://localhost:4173', registrationId: registro.registrationId, data: JSON.stringify(dados) });
+      await expect.poll(notificacoes, { timeout: 3_000 }).toEqual(esperado);
+    }).toPass({ timeout: 20_000 });
+  };
 
-  const notificacoes = () =>
-    page.evaluate(async () => (await (await navigator.serviceWorker.ready).getNotifications()).map((n) => `${n.title} | ${n.body} | ${n.tag} | ${(n.data as { url: string }).url}`));
+  const dentista = 'Dentista | Às 15:00 (em 15 minutos) | evento:x | /semana';
+  await entregar({ titulo: 'Seu dia', corpo: '2 coisas pedem atenção', url: '/', tag: 'resumo:2026-10-13' }, ['Seu dia | 2 coisas pedem atenção | resumo:2026-10-13 | /']);
+  await entregar({ titulo: 'Dentista', corpo: 'Às 15:00 (em 15 minutos)', url: '/semana', tag: 'evento:x' }, [dentista, 'Seu dia | 2 coisas pedem atenção | resumo:2026-10-13 | /']);
   // Mesma tag substitui: o resumo aparece uma vez só, com o texto mais novo.
-  // (A substituída vai para o fim da lista; a ordem não importa.)
-  await expect.poll(async () => (await notificacoes()).sort()).toEqual(['Dentista | Às 15:00 (em 15 minutos) | evento:x | /semana', 'Seu dia | 3 coisas pedem atenção | resumo:2026-10-13 | /']);
+  await entregar({ titulo: 'Seu dia', corpo: '3 coisas pedem atenção', url: '/', tag: 'resumo:2026-10-13' }, [dentista, 'Seu dia | 3 coisas pedem atenção | resumo:2026-10-13 | /']);
 });
