@@ -89,6 +89,11 @@ export function criarApp({ config, banco, push, agora = () => new Date() }: Depe
 
   app.get('/api/push/chave', async () => ({ chavePublica: push.chavePublica }));
 
+  // Para o app saber se este aparelho continua inscrito (o servidor pode ter apagado a inscrição).
+  app.post<{ Body: { endpoint?: string } }>('/api/push/estado', async (req) => ({
+    inscrito: typeof req.body?.endpoint === 'string' && banco.temInscricao(req.body.endpoint),
+  }));
+
   app.post<{ Body: { inscricao?: unknown } }>('/api/push/inscricao', async (req, res) => {
     const i = req.body?.inscricao;
     if (!ehInscricao(i)) return res.code(400).send({ erro: 'Inscrição de push inválida.' });

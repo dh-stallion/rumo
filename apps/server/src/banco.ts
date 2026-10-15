@@ -105,6 +105,10 @@ export class Banco {
     this.db.prepare('delete from inscricoes where endpoint = ?').run(endpoint);
   }
 
+  temInscricao(endpoint: string): boolean {
+    return !!this.db.prepare('select 1 from inscricoes where endpoint = ?').get(endpoint);
+  }
+
   inscricoes(): InscricaoPush[] {
     return (this.db.prepare('select dados from inscricoes').all() as { dados: string }[]).map((l) => JSON.parse(l.dados));
   }

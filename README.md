@@ -8,7 +8,7 @@ Local-first: os dados ficam no aparelho (IndexedDB) e o app funciona 100% offlin
 ```
 packages/core/   domínio puro em TypeScript (tipos, regras, fuso) + testes — reaproveitado pelo servidor
 apps/web/        PWA: React + Vite + Tailwind + Dexie
-apps/server/     (etapa 5) Fastify + SQLite + Web Push
+apps/server/     servidor opcional: Fastify + SQLite, sincronização, Web Push, backups e feed .ics
 ```
 
 ## Rodar localmente
@@ -167,6 +167,60 @@ O formato tem versão (`"versao": 1`), e a validação fica em `packages/core/sr
 Em **Ajustes → Armazenamento**, o app pede ao navegador armazenamento persistente
 (`navigator.storage.persist()`) e mostra o resultado.
 
+## Servidor: sincronização, notificações e backups
+
+O app funciona sozinho. O servidor (opcional) acrescenta sincronização entre aparelhos, lembretes por
+notificação, um backup diário e o calendário assinável.
+
+### Rodar o servidor
+
+```bash
+cp apps/server/.env.exemplo apps/server/.env   # e preencha RUMO_TOKEN (openssl rand -hex 24)
+npm run servidor                              # http://localhost:8787
+```
+
+Variáveis (em `apps/server/.env`): `RUMO_TOKEN` (obrigatório, 16+ caracteres), `RUMO_PORTA`, `RUMO_HOST`,
+`RUMO_DADOS` (pasta do banco, das chaves de notificação e dos backups), `RUMO_ORIGENS` (CORS) e
+`RUMO_CONTATO` (exigido pelo Web Push). Requer Node 22.13+ (usa o SQLite nativo do Node).
+
+### Conectar o app
+
+Em **Ajustes → Servidor e sincronização**, informe o endereço e o token. O app testa os dois antes de
+salvar. A partir daí sincroniza ao abrir, ao voltar para ele, alguns segundos depois de cada mudança e
+a cada 5 minutos. Conflitos: vale a versão mais recente de cada registro (last-write-wins). O endereço e o
+token ficam só no aparelho; não vão no backup.
+
+O app publicado no Netlify usa HTTPS, então o servidor também precisa de HTTPS: navegadores bloqueiam
+`http://` a partir de uma página `https://`.
+
+### Notificações
+
+Com o servidor conectado, **Ativar notificações** inscreve o aparelho. Os lembretes saem do servidor
+(um agendador roda a cada minuto) e respeitam as escolhas em Ajustes, que sincronizam:
+
+- **Resumo do dia** no horário escolhido, só se houver algo pedindo atenção ou compromissos;
+- **Antes de compromissos fixos**, com antecedência ajustável (inclusive ocorrências de séries);
+- **Contato com pessoas**, uma vez quando passa da frequência, a partir do horário do resumo.
+
+Pausar ou adiar algo no app também silencia o lembrete. Tocar na notificação abre a tela certa.
+No iPhone, Web Push só funciona com o Rumo **instalado na tela inicial** e aberto pelo ícone (iOS 16.4+).
+
+### Calendário assinável
+
+Com o servidor conectado, Ajustes mostra um endereço `webcal://…/feed/<código>.ics`. O código é derivado
+do token, então quem vê o endereço só consegue ler o calendário. No iPhone: Ajustes → Calendário → Contas →
+Adicionar Conta → Outra → Adicionar Calendário Assinado.
+
+### Backups no servidor
+
+Um backup JSON por dia em `RUMO_DADOS/backups` (os 14 mais recentes), no mesmo formato de
+**Exportar dados**, e `GET /api/backup` para baixar na hora.
+
+### Falta para hospedar em casa
+
+O servidor ainda não tem endereço fixo nem HTTPS: depende do NAS. Quando ele existir, falta escolher como
+expô-lo (Tailscale, Cloudflare Tunnel ou porta aberta + Caddy) e escrever o Dockerfile e o docker-compose.
+
 ## Regras da tela "Hoje"
 
 Ficam em `packages/core/src/rules`, cobertas por testes. Todas as contas usam dias de calendário no fuso
@@ -201,4 +255,4 @@ Cada card tem **feito**, **adiar** (amanhã, em 3 dias, semana que vem) e **paus
 - [x] 2. Planejador semanal com arrastar e soltar
 - [x] 3. Calendário semana/mês, recorrência, exportação .ics (feed assinável e CalDAV dependem da etapa 5)
 - [x] 4. Projetos e metas financeiras (metas em reais, sem cotação de moedas)
-- [ ] 5. Backend, sincronização, Web Push, Docker, backup
+- [~] 5. Servidor, sincronização, Web Push e backups prontos; falta hospedar no NAS (acesso HTTPS e Docker)

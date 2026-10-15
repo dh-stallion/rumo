@@ -31,6 +31,8 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
         navigateFallback: '/index.html',
+        // Notificações: o tratamento de push fica num arquivo próprio, importado pelo service worker.
+        importScripts: ['push-sw.js'],
       },
     }),
   ],

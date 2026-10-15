@@ -8,6 +8,7 @@ import { classeCartao, Secao } from '../../components/ui/Pagina';
 import { useToast } from '../../components/ui/Toast';
 import { chamar, ErroServidor, lerServidor, normalizarUrl, salvarServidor, testarServidor, type Servidor } from '../../sync/cliente';
 import { sincronizarAgora, useEstadoSync } from '../../sync/motor';
+import { Notificacoes } from './Notificacoes';
 
 /** http:// a partir de uma página https:// é bloqueado pelo navegador (exceto localhost). */
 const seraBloqueado = (url: string) =>
@@ -141,6 +142,8 @@ function Conectado({ servidor, onDesconectar }: { servidor: Servidor; onDesconec
           </Botao>
         </div>
       </div>
+
+      <Notificacoes servidor={servidor} />
 
       {feed && (
         <div className={`${classeCartao} space-y-2 p-3 text-sm`} aria-label="Assinatura do calendário">
